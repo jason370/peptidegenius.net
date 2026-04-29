@@ -1054,73 +1054,91 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
   </div>
 
   <!-- PeptideGenius Pro Upgrade Modal -->
-  <div id="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title" aria-hidden="true" tabindex="-1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;align-items:center;justify-content:center;padding:20px 16px;overflow-y:auto">
-    <div style="background:var(--color-background-primary);border-radius:14px;max-width:720px;width:100%;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-      <!-- Header -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:12px">
-        <div>
-          <h2 id="upgrade-modal-title" style="font-size:22px;font-weight:700;color:var(--color-text-primary);margin:0 0 6px;letter-spacing:-.02em">Upgrade to PeptideGenius Pro</h2>
-          <p style="font-size:14px;color:var(--color-text-secondary);margin:0">Unlimited peptides, full history, advanced features.</p>
-        </div>
-        <button id="upgrade-close" class="btn" style="padding:6px 10px;font-size:12px;flex-shrink:0;margin-top:-4px" aria-label="Close upgrade dialog">✕</button>
+  <div id="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title" aria-hidden="true" tabindex="-1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;align-items:center;justify-content:center;padding:20px 16px;overflow-y:auto">
+    <div style="background:linear-gradient(135deg,#FFFBF0 0%,#FFF5E6 100%);border-radius:16px;max-width:760px;width:100%;padding:2.5rem;box-shadow:0 20px 60px rgba(79,70,229,.15)">
+      <!-- Header with emoji -->
+      <div style="text-align:center;margin-bottom:2rem">
+        <div style="font-size:48px;margin-bottom:12px">✨</div>
+        <h2 id="upgrade-modal-title" style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 8px;letter-spacing:-.02em">Unlock Pro Features</h2>
+        <p style="font-size:15px;color:#78716C;margin:0">Unlimited tracking, full history, and peace of mind.</p>
       </div>
 
       <!-- Pricing Cards Grid -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:2rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:2.5rem">
         <!-- Monthly Card -->
-        <div class="pricing-card" style="padding:18px;border:1px solid #E5E7EB;border-radius:10px;background:linear-gradient(135deg,#F9FAFB 0%,#F3F4F6 100%);cursor:pointer;transition:all .2s ease" data-plan="monthly">
-          <div style="font-size:13px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Monthly</div>
-          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$5<span style="font-size:14px;font-weight:600;color:#6B7280">/mo</span></div>
-          <div style="font-size:11px;color:#9CA3AF;margin-bottom:14px;height:18px"></div>
-          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:600;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="monthly">Choose Plan</button>
+        <div class="pricing-card" style="padding:20px;border:2px solid #F3E8FF;border-radius:12px;background:white;cursor:pointer;transition:all .2s ease;text-align:center" data-plan="monthly">
+          <div style="font-size:12px;font-weight:700;color:#A78BFA;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Monthly</div>
+          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$5</div>
+          <div style="font-size:13px;color:#78716C;margin-bottom:16px;height:20px;font-weight:500">/month</div>
+          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:#A78BFA;color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="monthly">Choose Plan</button>
         </div>
 
         <!-- Yearly Card (Recommended) -->
-        <div class="pricing-card" style="padding:18px;border:2px solid #4F46E5;border-radius:10px;background:linear-gradient(135deg,#EEF2FF 0%,#E0E7FF 100%);cursor:pointer;transition:all .2s ease;position:relative;transform:scale(1.04)" data-plan="yearly">
-          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#10B981;color:white;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap">SAVE 18%</div>
-          <div style="font-size:13px;font-weight:600;color:#4F46E5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Yearly</div>
-          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$49<span style="font-size:14px;font-weight:600;color:#6B7280">/yr</span></div>
-          <div style="font-size:11px;color:#059669;margin-bottom:14px;height:18px;font-weight:600">Best for most users</div>
-          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:700;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="yearly">Choose Plan</button>
+        <div class="pricing-card" style="padding:20px;border:2px solid #FCD34D;border-radius:12px;background:linear-gradient(135deg,#FFFBF0 0%,#FEF3C7 100%);cursor:pointer;transition:all .2s ease;position:relative;transform:scale(1.05)" data-plan="yearly">
+          <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;box-shadow:0 4px 12px rgba(245,158,11,.3)">⚡ BEST VALUE</div>
+          <div style="font-size:12px;font-weight:700;color:#D97706;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Yearly</div>
+          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$49</div>
+          <div style="font-size:13px;color:#92400E;margin-bottom:16px;height:20px;font-weight:600">Save 18% vs monthly</div>
+          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="yearly">Choose Plan</button>
         </div>
 
         <!-- Lifetime Card -->
-        <div class="pricing-card" style="padding:18px;border:1px solid #E5E7EB;border-radius:10px;background:linear-gradient(135deg,#F9FAFB 0%,#F3F4F6 100%);cursor:pointer;transition:all .2s ease" data-plan="lifetime">
-          <div style="font-size:13px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Lifetime</div>
-          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$79<span style="font-size:14px;font-weight:600;color:#6B7280"> once</span></div>
-          <div style="font-size:11px;color:#6B7280;margin-bottom:14px;height:18px;font-weight:500">Own it forever</div>
-          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:600;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="lifetime">Choose Plan</button>
+        <div class="pricing-card" style="padding:20px;border:2px solid #DBEAFE;border-radius:12px;background:linear-gradient(135deg,#F0F9FF 0%,#E0F2FE 100%);cursor:pointer;transition:all .2s ease" data-plan="lifetime">
+          <div style="font-size:12px;font-weight:700;color:#0284C7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Lifetime</div>
+          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$79</div>
+          <div style="font-size:13px;color:#0369A1;margin-bottom:16px;height:20px;font-weight:500">Own it forever</div>
+          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:#0284C7;color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="lifetime">Choose Plan</button>
         </div>
       </div>
 
       <!-- License Key Entry Section -->
-      <div style="background:#F3F4F6;border-radius:10px;padding:18px;margin-bottom:18px">
-        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Already have a license key?</div>
+      <div style="background:white;border:2px dashed #F3E8FF;border-radius:12px;padding:18px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:10px">🔑 Have a license key?</div>
         <div style="display:flex;gap:8px">
-          <input type="text" id="license-key-input" placeholder="Paste your license key here..." style="flex:1;padding:10px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;font-family:monospace;background:white;color:#111827" />
-          <button id="restore-license-btn" class="btn" style="padding:10px 16px;font-size:13px;font-weight:600;background:white;color:#4F46E5;border:1px solid #4F46E5;border-radius:6px;cursor:pointer;white-space:nowrap">Restore</button>
+          <input type="text" id="license-key-input" placeholder="Paste your key here..." style="flex:1;padding:11px 13px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;font-family:monospace;background:#FAFAFA;color:#111827;transition:all .2s ease" />
+          <button id="restore-license-btn" class="btn" style="padding:11px 18px;font-size:13px;font-weight:700;background:#A78BFA;color:white;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s ease">Restore</button>
         </div>
-        <div style="font-size:11px;color:#6B7280;margin-top:8px">You'll receive your license key via email after purchase.</div>
+        <div style="font-size:11px;color:#78716C;margin-top:9px">You'll get your key via email after purchase.</div>
       </div>
 
       <!-- Features List -->
-      <div style="background:#F9FAFB;border-radius:10px;padding:16px;margin-bottom:18px">
-        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em">Pro Includes</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;color:#374151">
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Unlimited peptides</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Unlimited vials</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Full shot history</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Supply forecasting</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Data export (JSON/CSV)</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Cloud sync (coming)</div>
+      <div style="background:white;border:1px solid #F3E8FF;border-radius:12px;padding:18px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:800;color:#1F2937;margin-bottom:14px;text-transform:uppercase;letter-spacing:.08em">What You Get with Pro</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;color:#374151">
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Unlimited peptides</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Unlimited vials</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Full shot history</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Supply forecasting</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Data export</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Cloud sync (soon)</div>
+        </div>
+      </div>
+
+      <!-- Earn Promo Codes Section -->
+      <div style="background:linear-gradient(135deg,#FEF3C7 0%,#FCD34D 100%);border:2px solid #FCD34D;border-radius:12px;padding:18px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:800;color:#92400E;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em">🎁 Earn Promo Codes</div>
+        <div style="font-size:13px;color:#78350F;line-height:1.6">
+          <p style="margin:0 0 10px">Help us improve! Share your love for PeptideGenius and earn discounts:</p>
+          <ul style="margin:0;padding-left:20px;font-size:12.5px">
+            <li style="margin-bottom:8px"><strong>★★★★★ Review:</strong> Share a screenshot of your review on social media or our community — get <strong>10-30% off</strong> depending on the feedback</li>
+            <li style="margin-bottom:8px"><strong>Bug Report:</strong> Found a bug? Send screenshots and details to <strong>PeptideGenius@gmail.com</strong> — get <strong>15% off</strong></li>
+            <li><strong>Feature Ideas:</strong> Have a great idea? Email us your suggestion — get <strong>5-20% off</strong> based on how cool it is!</li>
+          </ul>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #FBBF24">
+            <div style="font-size:12px;font-weight:700;color:#92400E;margin-bottom:6px">📧 Send to: <span style="font-family:monospace;background:white;padding:2px 6px;border-radius:4px">PeptideGenius@gmail.com</span></div>
+            <div style="font-size:11px;color:#78350F">Include: description, screenshot(s), and your email for the promo code</div>
+          </div>
         </div>
       </div>
 
       <!-- CTA -->
-      <button id="upgrade-purchase-btn" style="width:100%;padding:14px;font-size:14px;font-weight:700;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:8px;cursor:pointer;transition:background .2s ease">Continue to Payment</button>
-      <div style="text-align:center;margin-top:12px;font-size:11px;color:#6B7280">
+      <button id="upgrade-purchase-btn" style="width:100%;padding:14px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;border:none;border-radius:10px;cursor:pointer;transition:all .2s ease;box-shadow:0 4px 15px rgba(245,158,11,.2)">Continue to Payment</button>
+      <div style="text-align:center;margin-top:14px;font-size:11px;color:#78716C">
         Secure payment powered by <strong>Stripe</strong> • 30-day money-back guarantee
       </div>
+
+      <!-- Close Button -->
+      <button id="upgrade-close" style="position:absolute;top:16px;right:16px;background:white;border:1px solid #E5E7EB;border-radius:8px;padding:6px 10px;cursor:pointer;color:#6B7280;font-size:18px;font-weight:600;transition:all .2s ease" aria-label="Close upgrade dialog">✕</button>
     </div>
   </div>
 
