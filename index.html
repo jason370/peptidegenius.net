@@ -1028,7 +1028,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
     </div>
     <div class="app-header-right">
       <div class="hdr-top-row">
-        <a href="https://buymeacoffee.com/peptidegenius" target="_blank" rel="noopener noreferrer" class="hdr-support-link" title="Support PeptideGenius on Buy Me a Coffee — opens in a new tab">
+        <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" class="hdr-support-link" title="Support PeptideGenius on Buy Me a Coffee — opens in a new tab">
           <span class="hdr-support-icon">☕</span>
           <span class="hdr-support-text">Buy me a coffee</span>
         </a>
@@ -1045,6 +1045,77 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
         </button>
         <button id="privacy-btn" style="background:none;border:none;font-size:12px;color:#1D9E75;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit;font-weight:500" title="Privacy & how this app works">🔒 Privacy</button>
         <span class="app-date" id="hdr-date"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PeptideGenius Pro Upgrade Modal -->
+  <div id="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title" aria-hidden="true" tabindex="-1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;align-items:center;justify-content:center;padding:20px 16px;overflow-y:auto">
+    <div style="background:var(--color-background-primary);border-radius:14px;max-width:720px;width:100%;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:12px">
+        <div>
+          <h2 id="upgrade-modal-title" style="font-size:22px;font-weight:700;color:var(--color-text-primary);margin:0 0 6px;letter-spacing:-.02em">Upgrade to PeptideGenius Pro</h2>
+          <p style="font-size:14px;color:var(--color-text-secondary);margin:0">Unlimited peptides, full history, advanced features.</p>
+        </div>
+        <button id="upgrade-close" class="btn" style="padding:6px 10px;font-size:12px;flex-shrink:0;margin-top:-4px" aria-label="Close upgrade dialog">✕</button>
+      </div>
+
+      <!-- Pricing Cards Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:2rem">
+        <!-- Monthly Card -->
+        <div class="pricing-card" style="padding:18px;border:1px solid #E5E7EB;border-radius:10px;background:linear-gradient(135deg,#F9FAFB 0%,#F3F4F6 100%);cursor:pointer;transition:all .2s ease" data-plan="monthly">
+          <div style="font-size:13px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Monthly</div>
+          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$5<span style="font-size:14px;font-weight:600;color:#6B7280">/mo</span></div>
+          <div style="font-size:11px;color:#9CA3AF;margin-bottom:14px;height:18px"></div>
+          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:600;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="monthly">Choose Plan</button>
+        </div>
+
+        <!-- Yearly Card (Recommended) -->
+        <div class="pricing-card" style="padding:18px;border:2px solid #4F46E5;border-radius:10px;background:linear-gradient(135deg,#EEF2FF 0%,#E0E7FF 100%);cursor:pointer;transition:all .2s ease;position:relative;transform:scale(1.04)" data-plan="yearly">
+          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#10B981;color:white;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap">SAVE 18%</div>
+          <div style="font-size:13px;font-weight:600;color:#4F46E5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Yearly</div>
+          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$49<span style="font-size:14px;font-weight:600;color:#6B7280">/yr</span></div>
+          <div style="font-size:11px;color:#059669;margin-bottom:14px;height:18px;font-weight:600">Best for most users</div>
+          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:700;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="yearly">Choose Plan</button>
+        </div>
+
+        <!-- Lifetime Card -->
+        <div class="pricing-card" style="padding:18px;border:1px solid #E5E7EB;border-radius:10px;background:linear-gradient(135deg,#F9FAFB 0%,#F3F4F6 100%);cursor:pointer;transition:all .2s ease" data-plan="lifetime">
+          <div style="font-size:13px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Lifetime</div>
+          <div style="font-size:28px;font-weight:800;color:#111827;margin-bottom:3px">$79<span style="font-size:14px;font-weight:600;color:#6B7280"> once</span></div>
+          <div style="font-size:11px;color:#6B7280;margin-bottom:14px;height:18px;font-weight:500">Own it forever</div>
+          <button class="btn" style="width:100%;padding:9px 12px;font-size:13px;font-weight:600;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:6px;cursor:pointer" data-plan-btn="lifetime">Choose Plan</button>
+        </div>
+      </div>
+
+      <!-- License Key Entry Section -->
+      <div style="background:#F3F4F6;border-radius:10px;padding:18px;margin-bottom:18px">
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Already have a license key?</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="license-key-input" placeholder="Paste your license key here..." style="flex:1;padding:10px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;font-family:monospace;background:white;color:#111827" />
+          <button id="restore-license-btn" class="btn" style="padding:10px 16px;font-size:13px;font-weight:600;background:white;color:#4F46E5;border:1px solid #4F46E5;border-radius:6px;cursor:pointer;white-space:nowrap">Restore</button>
+        </div>
+        <div style="font-size:11px;color:#6B7280;margin-top:8px">You'll receive your license key via email after purchase.</div>
+      </div>
+
+      <!-- Features List -->
+      <div style="background:#F9FAFB;border-radius:10px;padding:16px;margin-bottom:18px">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em">Pro Includes</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;color:#374151">
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Unlimited peptides</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Unlimited vials</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Full shot history</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Supply forecasting</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Data export (JSON/CSV)</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="color:#10B981;font-weight:700">✓</span> Cloud sync (coming)</div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <button id="upgrade-purchase-btn" style="width:100%;padding:14px;font-size:14px;font-weight:700;background:#4F46E5;color:white;border:1px solid #4F46E5;border-radius:8px;cursor:pointer;transition:background .2s ease">Continue to Payment</button>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#6B7280">
+        Secure payment powered by <strong>Stripe</strong> • 30-day money-back guarantee
       </div>
     </div>
   </div>
@@ -1790,7 +1861,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
         <div style="font-size:10.5px;font-weight:700;color:var(--accent-amber-fg);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Like it? Support the work</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent-amber-fg);letter-spacing:-.01em;margin-bottom:.5rem">Buy me a coffee ☕</div>
         <p style="font-size:12.5px;line-height:1.6;color:var(--accent-amber-fg);margin:0 0 .75rem">PeptideGenius is free and stays free. If it's saved you time, money, or a missed dose, a small tip keeps the updates coming — and lets me spend weekends on new features instead of on rent.</p>
-        <a href="https://buymeacoffee.com/peptidegenius" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:#FFDD00;color:#0D0C22;text-decoration:none;font-size:13px;font-weight:700;border-radius:8px;border:.5px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.1);transition:all .15s ease;font-family:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 3px 8px rgba(0,0,0,.15)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 2px rgba(0,0,0,.1)'">
+        <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:#FFDD00;color:#0D0C22;text-decoration:none;font-size:13px;font-weight:700;border-radius:8px;border:.5px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.1);transition:all .15s ease;font-family:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 3px 8px rgba(0,0,0,.15)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 2px rgba(0,0,0,.1)'">
           <span style="font-size:15px">☕</span>
           <span>Buy me a coffee</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;margin-left:1px"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
@@ -2407,6 +2478,93 @@ const PG = (function(){
 })();
 // Initialize license state at script parse time so checks work before init() runs.
 PG.init();
+
+/* ============================================================
+   SECTION: Upgrade Modal UI Handler
+   ─────────────────────────────────────────────────────────────
+   Controls the Pro upgrade modal: open/close, plan selection,
+   license key entry, and payment flow stubs.
+   ============================================================ */
+function showUpgradeModal(reason) {
+  const modal = document.getElementById('upgrade-modal');
+  if (!modal) return;
+  modal.setAttribute('aria-hidden', 'false');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Track which reason triggered the upgrade prompt (for analytics/A/B testing later)
+  modal.dataset.triggerReason = reason || 'unknown';
+}
+function hideUpgradeModal() {
+  const modal = document.getElementById('upgrade-modal');
+  if (!modal) return;
+  modal.setAttribute('aria-hidden', 'true');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// Wire up modal events once DOM is ready
+document.addEventListener('DOMContentLoaded', function(){
+  const modal = document.getElementById('upgrade-modal');
+  if (!modal) return;
+
+  // Close button
+  const closeBtn = document.getElementById('upgrade-close');
+  if (closeBtn) closeBtn.addEventListener('click', hideUpgradeModal);
+
+  // Click outside modal to close
+  modal.addEventListener('click', function(e){
+    if (e.target === modal) hideUpgradeModal();
+  });
+
+  // Escape key to close
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+      hideUpgradeModal();
+    }
+  });
+
+  // Plan selection buttons
+  document.querySelectorAll('[data-plan-btn]').forEach(btn => {
+    btn.addEventListener('click', async function(e){
+      const plan = this.getAttribute('data-plan-btn');
+      console.log('[Upgrade Modal] Plan selected:', plan);
+      // Stub for now — would redirect to payment processor (Stripe, LemonSqueezy, etc.)
+      // For testing: just show a message
+      alert(`Plan selected: ${plan}\n\nPayment integration coming soon.\n\nFor now, use a dev key like "PG-DEV-LIFETIME" to test Pro features.`);
+    });
+  });
+
+  // Restore license key
+  const restoreBtn = document.getElementById('restore-license-btn');
+  const keyInput = document.getElementById('license-key-input');
+  if (restoreBtn && keyInput) {
+    restoreBtn.addEventListener('click', async function(){
+      const key = keyInput.value.trim();
+      if (!key) {
+        alert('Please enter a license key.');
+        return;
+      }
+      const result = await PG.activate(key);
+      if (result.ok) {
+        alert('✓ License activated! Pro features are now unlocked.');
+        hideUpgradeModal();
+        // Optionally reload or refresh the UI to show Pro state
+        if (typeof refreshAppState === 'function') refreshAppState();
+      } else {
+        alert('✗ ' + (result.reason || 'Invalid license key.'));
+      }
+    });
+  }
+
+  // Continue to Payment button (stub)
+  const purchaseBtn = document.getElementById('upgrade-purchase-btn');
+  if (purchaseBtn) {
+    purchaseBtn.addEventListener('click', function(){
+      alert('Payment integration coming soon.\n\nFor now, use a dev key to test:\n\n• PG-DEV-LIFETIME\n• PG-DEV-PRO\n• PG-TEST-1234');
+    });
+  }
+}, { once: true });
 
 /* ============================================================
    SECTION: Seed Data & Catalogs
@@ -4746,7 +4904,13 @@ function renderLog(){
   // Keep the peptide picker in sync with current inventory (fridge items sorted first)
   popSel();
   renderRotation();
-  const s=[...S.shots].sort((a,b)=>b.date.localeCompare(a.date));
+  let s=[...S.shots].sort((a,b)=>b.date.localeCompare(a.date));
+  // PeptideGenius: filter shots by history cutoff for free users
+  const cutoff = PG.historyCutoff();
+  if (cutoff) {
+    const cutoffStr = cutoff.toISOString().split('T')[0]; // YYYY-MM-DD
+    s = s.filter(shot => shot.date >= cutoffStr);
+  }
   // Known side-effect tag labels. Unknown tags (user-custom) fall through to `t` and MUST be escaped.
   const TAG_LBL={'energy':'⚡ Energy','sleep':'💤 Sleep','appetite-down':'↓ Appetite','appetite-up':'↑ Appetite','mood':'🙂 Mood','nausea':'🤢 Nausea','fatigue':'😴 Fatigue','headache':'🤕 Headache','flush':'🔥 Flush','joints':'🦴 Joints','recovery':'💪 Recovery','site-irritation':'📍 Site'};
   const rowHtml=x=>{
@@ -5372,6 +5536,13 @@ function saveVialForm(){
     recomputeStockFromVials(v.peptideName);
   }else{
     // Add mode: spawn `qty` rows. Each gets its own id.
+    // PeptideGenius: enforce free-tier vial limit.
+    if(!PG.checkVialLimit()){
+      m.textContent='Free plan is limited to '+PG.LIMITS.vials+' vials. Upgrade to Pro for unlimited.';
+      m.style.color='#A32D2D';
+      PG.openUpgrade('vial-limit');
+      return false;
+    }
     for(let i=0;i<qty;i++){
       S.vials.push(Object.assign({id:S.nV++,remainingMcg:baseFields.totalMcg},baseFields));
     }
@@ -9590,7 +9761,7 @@ init();
     <div style="font-weight:700;color:var(--color-text-primary);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Disclaimer</div>
     PeptideGenius is a personal tracking tool, not medical advice, diagnosis, or treatment. Nothing here is reviewed by a licensed clinician. Most peptides discussed are <em>research compounds</em> — not FDA-approved for human use outside of specific prescription contexts. Always consult a qualified healthcare professional before starting, changing, or stopping any protocol. You are solely responsible for your own choices, sourcing, sterility, and injection technique. Use of this tool means you accept all risk.
   </div>
-  <div>© 2026 <a href="https://peptidegenius.com" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.com</a> · All rights reserved · <a href="https://buymeacoffee.com/peptidegenius" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
+  <div>© 2026 <a href="https://peptidegenius.com" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.com</a> · All rights reserved · <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
   <div style="margin-top:3px;opacity:.6;font-size:9.5px;letter-spacing:.05em">Unauthorized redistribution prohibited · PG-2026Q2</div>
 </footer>
 </body>
