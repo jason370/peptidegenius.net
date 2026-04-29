@@ -2429,7 +2429,14 @@ const PG = (function(){
   }
   function countActiveVials(){
     if (typeof S === 'undefined' || !S || !Array.isArray(S.vials)) return 0;
-    return S.vials.filter(v => !v.archived && !v.depleted).length;
+    return S.vials.filter(v => {
+      // Don't count archived or depleted vials
+      if (v.archived || v.depleted) return false;
+      // Don't count vials for supply items (like BAC water, alcohol pads)
+      const peptide = S.inv.find(i => i.name === v.peptideName);
+      if (peptide && peptide.isSupply) return false;
+      return true;
+    }).length;
   }
 
   return {
