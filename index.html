@@ -918,6 +918,10 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
 <!-- origin-fingerprint: PG-2026Q2-pg10000a | © 2026 PeptideGenius.com -->
 <div data-tmp-origin="peptidegenius-com-v1-a7f3d9e2bcc4" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">© 2026 PeptideGenius.com — All Rights Reserved — PG-2026Q2-pg10000a</div>
 <div class="app">
+  <!-- Subtle trial indicator -->
+  <div id="trial-banner" style="display:none;padding:6px 16px;background:linear-gradient(90deg,#F0FDFB 0%,#ECFDF5 100%);border-bottom:1px solid #D1FAE5;font-size:11px;color:#059669;font-weight:500;text-align:center;letter-spacing:0.5px">
+    🎁 Free trial active • <span id="trial-days">30</span> days remaining
+  </div>
   <div class="app-header">
     <div class="app-brand">
       <div class="app-mark">
@@ -2509,6 +2513,25 @@ const PG = (function(){
 })();
 // Initialize license state at script parse time so checks work before init() runs.
 PG.init();
+
+// Update trial banner
+(function(){
+  const banner = document.getElementById('trial-banner');
+  const daysSpan = document.getElementById('trial-days');
+  if (!banner || !daysSpan) return;
+  
+  if (PG.isTrialActive()) {
+    const trialStart = localStorage.getItem('pg.trial.v1');
+    if (trialStart) {
+      const startDate = new Date(trialStart);
+      const now = new Date();
+      const daysElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+      const daysLeft = Math.max(0, 30 - daysElapsed);
+      daysSpan.textContent = daysLeft;
+      banner.style.display = 'block';
+    }
+  }
+})();
 
 /* ============================================================
    SECTION: Upgrade Modal UI Handler
