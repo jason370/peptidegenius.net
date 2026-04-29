@@ -2480,15 +2480,18 @@ const PG = (function(){
     countActivePeptides,
     countActiveVials,
     checkPeptideLimit(){
-      if (_isPro || _isTrialActive()) return true;
+      const isPro = _isPro || _isTrialActive();
+      if (isPro) return true;
       return countActivePeptides() < PG_FREE_LIMITS.peptides;
     },
     checkVialLimit(){
-      if (_isPro || _isTrialActive()) return true;
+      const isPro = _isPro || _isTrialActive();
+      if (isPro) return true;
       return countActiveVials() < PG_FREE_LIMITS.vials;
     },
     historyCutoff(){
-      if (_isPro || _isTrialActive()) return null;
+      const isPro = _isPro || _isTrialActive();
+      if (isPro) return null;
       const d = new Date();
       d.setDate(d.getDate() - PG_FREE_LIMITS.historyDays);
       return d;
