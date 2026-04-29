@@ -2381,7 +2381,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
    ============================================================ */
 const PG_FREE_LIMITS = Object.freeze({
   peptides: 3,
-  vials: 5,
+  vials: 3,
   historyDays: 90
 });
 const PG_PRICING = Object.freeze({
@@ -2391,23 +2391,46 @@ const PG_PRICING = Object.freeze({
 });
 const PG_LS_KEY  = 'pg.license.v1';
 const PG_LS_FLAG = 'pg.proStatus.v1';
+const PG_LS_TRIAL = 'pg.trial.v1'; // stores trial start date
 
 const PG = (function(){
   let _key = null;
   let _isPro = false;
+  let _trialStartDate = null;
 
   function _load(){
     try {
       _key = localStorage.getItem(PG_LS_KEY) || null;
       _isPro = localStorage.getItem(PG_LS_FLAG) === '1';
-    } catch(e){ _key = null; _isPro = false; }
+      _trialStartDate = localStorage.getItem(PG_LS_TRIAL) || null;
+    } catch(e){ _key = null; _isPro = false; _trialStartDate = null; }
   }
   function _persist(){
     try {
       if (_key) localStorage.setItem(PG_LS_KEY, _key);
       else localStorage.removeItem(PG_LS_KEY);
       localStorage.setItem(PG_LS_FLAG, _isPro ? '1' : '0');
+      if (_trialStartDate) localStorage.setItem(PG_LS_TRIAL, _trialStartDate);
+      else localStorage.removeItem(PG_LS_TRIAL);
     } catch(e){}
+  }
+
+  // Check if free trial is still active (30 days from start)
+  function _isTrialActive(){
+    if (!_trialStartDate) return false;
+    const startDate = new Date(_trialStartDate);
+    const now = new Date();
+    const daysElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    return daysElapsed < 30;
+  }
+
+  // Activate free trial (called on first page load or manually)
+  function _activateTrial(){
+    if (!_trialStartDate) {
+      _trialStartDate = new Date().toISOString();
+      _isPro = true;
+      _persist();
+    }
   }
 
   // STUB — replace with real validation when payment is wired up.
@@ -2440,9 +2463,10 @@ const PG = (function(){
   }
 
   return {
-    init(){ _load(); },
-    isPro(){ return _isPro; },
+    init(){ _load(); _activateTrial(); },
+    isPro(){ return _isPro || _isTrialActive(); },
     activeKey(){ return _key; },
+    isTrialActive(){ return _isTrialActive(); },
     async activate(key){
       const r = await validateKey(key);
       if (r.ok){ _key = key; _isPro = true; _persist(); }
@@ -2452,15 +2476,15 @@ const PG = (function(){
     countActivePeptides,
     countActiveVials,
     checkPeptideLimit(){
-      if (_isPro) return true;
+      if (_isPro || _isTrialActive()) return true;
       return countActivePeptides() < PG_FREE_LIMITS.peptides;
     },
     checkVialLimit(){
-      if (_isPro) return true;
+      if (_isPro || _isTrialActive()) return true;
       return countActiveVials() < PG_FREE_LIMITS.vials;
     },
     historyCutoff(){
-      if (_isPro) return null;
+      if (_isPro || _isTrialActive()) return null;
       const d = new Date();
       d.setDate(d.getDate() - PG_FREE_LIMITS.historyDays);
       return d;
