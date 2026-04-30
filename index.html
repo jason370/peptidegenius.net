@@ -2597,13 +2597,22 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // Plan selection buttons
+  const STRIPE_LINKS = {
+    monthly:  'https://buy.stripe.com/4gMeVe3ujdAObtv5QG5sA00',
+    yearly:   'https://buy.stripe.com/8x26oI8OD7cqbtv3Iy5sA01',
+    lifetime: 'https://buy.stripe.com/fZu4gA7Kz2Wa8hj7YO5sA02'
+  };
+
   document.querySelectorAll('[data-plan-btn]').forEach(btn => {
-    btn.addEventListener('click', async function(e){
+    btn.addEventListener('click', function(){
       const plan = this.getAttribute('data-plan-btn');
-      console.log('[Upgrade Modal] Plan selected:', plan);
-      // Stub for now — would redirect to payment processor (Stripe, LemonSqueezy, etc.)
-      // For testing: just show a message
-      alert(`${plan.charAt(0).toUpperCase() + plan.slice(1)} plan selected!\n\nPayment processing is coming soon. We'll notify you when it's ready.\n\nEmail PeptideGenius@gmail.com for early access.`);
+      window._selectedUpgradePlan = plan;
+      const link = STRIPE_LINKS[plan];
+      if (link) {
+        window.open(link, '_blank');
+      } else {
+        alert('Plan not found. Please email PeptideGenius@gmail.com for help.');
+      }
     });
   });
 
@@ -2629,11 +2638,17 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // Continue to Payment button (stub)
+  // Continue to Payment button — opens Stripe checkout for selected plan
   const purchaseBtn = document.getElementById('upgrade-purchase-btn');
   if (purchaseBtn) {
     purchaseBtn.addEventListener('click', function(){
-      alert('Payment processing is coming soon!\n\nWe\'ll notify you when Pro is available for purchase.\n\nEmail PeptideGenius@gmail.com for early access.');
+      const plan = window._selectedUpgradePlan || 'monthly';
+      const links = {
+        monthly:  'https://buy.stripe.com/4gMeVe3ujdAObtv5QG5sA00',
+        yearly:   'https://buy.stripe.com/8x26oI8OD7cqbtv3Iy5sA01',
+        lifetime: 'https://buy.stripe.com/fZu4gA7Kz2Wa8hj7YO5sA02'
+      };
+      window.open(links[plan] || links.monthly, '_blank');
     });
   }
 }, { once: true });
@@ -9856,62 +9871,8 @@ document.querySelectorAll('[data-plan-btn]').forEach(btn => {
   });
 });
 
-// Handle purchase button
-document.getElementById('upgrade-purchase-btn')?.addEventListener('click', async function(){
-  if (!selectedPlan) {
-    alert('Please select a plan first.');
-    return;
-  }
-
-  // Get user email (could be from form or prompt)
-  const email = prompt('Enter your email address:');
-  if (!email) return;
-
-  // Show loading state
-  this.disabled = true;
-  this.textContent = 'Processing...';
-
-  try {
-    // Call Firebase Cloud Function to create checkout session
-    const response = await fetch(
-      'https://us-central1-peptide-genius.cloudfunctions.net/createCheckoutSession',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: {
-            plan: selectedPlan,
-            email: email
-          }
-        })
-      }
-    );
-
-    const result = await response.json();
-    
-    if (result.result?.sessionId) {
-      // Redirect to Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: result.result.sessionId
-      });
-      
-      if (error) {
-        alert('Error: ' + error.message);
-        this.disabled = false;
-        this.textContent = 'Continue to Payment';
-      }
-    } else {
-      alert('Error creating checkout session. Please try again.');
-      this.disabled = false;
-      this.textContent = 'Continue to Payment';
-    }
-  } catch (err) {
-    console.error('Payment error:', err);
-    alert('Payment error. Please try again.');
-    this.disabled = false;
-    this.textContent = 'Continue to Payment';
-  }
-});
+// Handle purchase button — direct Stripe Payment Links (no backend needed)
+// Plan is tracked via window._selectedUpgradePlan set by data-plan-btn clicks
 
 // Check for payment success in URL
 window.addEventListener('load', function(){
