@@ -1,0 +1,27 @@
+{
+  "name": "PeptideGenius",
+  "short_name": "PeptideGenius",
+  "description": "All-in-one peptide management tool. Track peptides, vials, shots, supplies & titrations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF2FF",
+  "theme_color": "#4F46E5",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness"],
+  "lang": "en"
+}
