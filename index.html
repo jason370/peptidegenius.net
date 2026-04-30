@@ -10,12 +10,12 @@
   ║   of derivative works — in whole or in part — is strictly prohibited  ║
   ║   without prior written permission from the copyright holder.         ║
   ║                                                                        ║
-  ║   Official site:       https://peptidegenius.com                         ║
+  ║   Official site:       https://peptidegenius.net                         ║
   ║   Report piracy:       PeptideGenius@gmail.com                           ║
   ║   Origin fingerprint:  PG-2026Q2-pg10000a                             ║
   ║                                                                        ║
   ║   If you are viewing this source from a host other than                ║
-  ║   peptidegenius.com, you are likely viewing an unauthorized copy.        ║
+  ║   peptidegenius.net, you are likely viewing an unauthorized copy.        ║
   ║                                                                        ║
   ╚════════════════════════════════════════════════════════════════════════╝
 -->
@@ -63,11 +63,13 @@
   var ALLOWED_HOSTS=[
     'peptidegenius.com',
     'www.peptidegenius.com',
+    'peptidegenius.net',
+    'www.peptidegenius.net',
     'localhost','localhost.localdomain',
     '127.0.0.1','0.0.0.0','::1',
     ''  // empty hostname = file:// opened locally
   ];
-  var ALLOWED_SUFFIXES=['.peptidegenius.com','.netlify.app','.ngrok.io','.trycloudflare.com'];
+  var ALLOWED_SUFFIXES=['.peptidegenius.com','.peptidegenius.net','.netlify.app','.ngrok.io','.trycloudflare.com'];
   try{
     var h=(location.hostname||'').toLowerCase();
     var ok=ALLOWED_HOSTS.indexOf(h)>=0;
@@ -916,7 +918,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
 </head>
 <body>
 <!-- origin-fingerprint: PG-2026Q2-pg10000a | © 2026 PeptideGenius.com -->
-<div data-tmp-origin="peptidegenius-com-v1-a7f3d9e2bcc4" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">© 2026 PeptideGenius.com — All Rights Reserved — PG-2026Q2-pg10000a</div>
+<div data-tmp-origin="peptidegenius-com-v1-a7f3d9e2bcc4" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">© 2026 PeptideGenius.net — All Rights Reserved — PG-2026Q2-pg10000a</div>
 <div class="app">
   <!-- Subtle trial indicator -->
   <div id="trial-banner" style="display:none;padding:6px 16px;background:linear-gradient(90deg,#F0FDFB 0%,#ECFDF5 100%);border-bottom:1px solid #D1FAE5;font-size:11px;color:#059669;font-weight:500;text-align:center;letter-spacing:0.5px">
@@ -1195,7 +1197,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
       <div style="font-size:22px;line-height:1;flex-shrink:0">⚠️</div>
       <div style="flex:1;min-width:240px">
         <div style="font-size:13.5px;font-weight:700;color:var(--info-amber-fg);margin-bottom:3px">Your data may disappear the next time you open a new version of this file</div>
-        <div style="font-size:12px;color:var(--info-amber-fg2);line-height:1.55">You're running this from a downloaded file. Browsers tie saved data to the exact file path — if you open a newer download (like <code>peptide_tracker (2).html</code>), your shots, inventory and packages will look empty. <b>Click "💾 Backup now" to save a JSON file you can re-import into any future copy.</b> Or even better: deploy to peptidegenius.com once and always use that URL instead.</div>
+        <div style="font-size:12px;color:var(--info-amber-fg2);line-height:1.55">You're running this from a downloaded file. Browsers tie saved data to the exact file path — if you open a newer download (like <code>peptide_tracker (2).html</code>), your shots, inventory and packages will look empty. <b>Click "💾 Backup now" to save a JSON file you can re-import into any future copy.</b> Or even better: deploy to peptidegenius.net once and always use that URL instead.</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <button class="btn" id="sb-backup" style="padding:5px 12px;font-size:12px;font-weight:600;background:var(--info-amber-border);color:var(--color-background-primary);border-color:var(--info-amber-fg);white-space:nowrap">💾 Backup now</button>
@@ -1925,7 +1927,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
   <div class="card">
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:.75rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#BE123C,#F43F5E)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><div style="font-size:11px;font-weight:700;color:var(--accent-rose-fg);text-transform:uppercase;letter-spacing:.08em">Backups &amp; Moving Devices</div></div>
     <details class="faq-q" open><summary>Where are the Save backup and Import buttons?</summary><div class="faq-a">They're hidden behind a deliberate gesture to prevent accidental taps. <strong>Tap the PeptideGenius syringe logo at the top-left of the app three times in quick succession</strong> (within about a second). The <strong>Save backup</strong> and <strong>Import</strong> buttons will appear right next to the logo. Tap the logo again (single tap) or load a file to hide them. This keeps casual pokes from triggering a file download while still making the controls easy to reach when you want them.</div></details>
-    <details class="faq-q"><summary>Why might my data disappear?</summary><div class="faq-a">Browsers tie saved data to the exact file path and origin. If you download a newer copy of the HTML file (e.g. <code>peptide_tracker (2).html</code>), the browser treats it as a different site and you'll see an empty tracker. Use <strong>Save backup</strong> regularly, or deploy the file to a stable URL like peptidegenius.com.</div></details>
+    <details class="faq-q"><summary>Why might my data disappear?</summary><div class="faq-a">Browsers tie saved data to the exact file path and origin. If you download a newer copy of the HTML file (e.g. <code>peptide_tracker (2).html</code>), the browser treats it as a different site and you'll see an empty tracker. Use <strong>Save backup</strong> regularly, or deploy the file to a stable URL like peptidegenius.net.</div></details>
     <details class="faq-q"><summary>How do I back up my data?</summary><div class="faq-a"><strong>Triple-tap the PeptideGenius logo</strong> at the top-left of the app to reveal the hidden controls, then click <strong>Save backup</strong>. This downloads a JSON file containing all of your shots, stacks, inventory, and settings. Keep a copy somewhere safe (cloud drive, USB, email to yourself).</div></details>
     <details class="faq-q"><summary>How do I restore or move to a new device?</summary><div class="faq-a">Open the app on the new device, <strong>triple-tap the logo</strong> to reveal the hidden controls, then click <strong>Import</strong> and select your JSON backup. Everything will come across — shots, schedules, inventory, prices, and package tracking.</div></details>
     <details class="faq-q"><summary>How often should I back up?</summary><div class="faq-a">After any significant change (new stack, new inventory, dose adjustment), and at minimum once a week. The backup file is tiny — usually under 100 KB.</div></details>
@@ -1977,12 +1979,12 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
         <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">PeptideGenius@gmail.com</div>
         <div style="font-size:11.5px;color:var(--color-text-secondary);line-height:1.5">Support, bug reports, feature requests, feedback</div>
       </a>
-      <a href="https://peptidegenius.com" target="_blank" rel="noopener" style="display:block;padding:1.25rem 1.5rem;text-decoration:none;color:inherit;transition:background .15s ease" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='transparent'">
+      <a href="https://peptidegenius.net" target="_blank" rel="noopener" style="display:block;padding:1.25rem 1.5rem;text-decoration:none;color:inherit;transition:background .15s ease" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='transparent'">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <div class="icon-tile-sm" style="background:linear-gradient(135deg,#4D7C0F,#65A30D)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
           <div style="font-size:11px;font-weight:700;color:var(--accent-lime-fg);text-transform:uppercase;letter-spacing:.08em">Website</div>
         </div>
-        <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">peptidegenius.com</div>
+        <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">peptidegenius.net</div>
         <div style="font-size:11.5px;color:var(--color-text-secondary);line-height:1.5">Latest version, updates, and news</div>
       </a>
     </div>
@@ -2010,7 +2012,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
   </div>
   <div class="card" style="border-top:3px solid #DC2626;background:linear-gradient(135deg,#FEF2F2 0%,#FEE2E2 100%)">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:.35rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#991B1B,#DC2626)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div><div style="font-size:13px;font-weight:700;color:var(--accent-red-fg)">Report unauthorized copies</div></div>
-    <p style="font-size:12px;line-height:1.55;color:var(--accent-red-fg);margin:0">If you find PeptideGenius rehosted on a site other than <a href="https://peptidegenius.com" style="color:var(--accent-red-fg);font-weight:600" target="_blank" rel="noopener">peptidegenius.com</a> or being sold, please report it to <a href="mailto:PeptideGenius@gmail.com" style="color:var(--accent-red-fg);font-weight:600">PeptideGenius@gmail.com</a>.</p>
+    <p style="font-size:12px;line-height:1.55;color:var(--accent-red-fg);margin:0">If you find PeptideGenius rehosted on a site other than <a href="https://peptidegenius.net" style="color:var(--accent-red-fg);font-weight:600" target="_blank" rel="noopener">peptidegenius.net</a> or being sold, please report it to <a href="mailto:PeptideGenius@gmail.com" style="color:var(--accent-red-fg);font-weight:600">PeptideGenius@gmail.com</a>.</p>
   </div>
 </div>
 </div>
@@ -3729,7 +3731,7 @@ function load(){
   (S.inv||[]).forEach(it=>{if(!it.isSupply&&!it.isBlend)recomputeStockFromVials(it.name);});
   rebuildCM();
 }
-const __PG_ORIGIN__='peptidegenius.com/v1/PG-2026Q2-pg10000a';
+const __PG_ORIGIN__='peptidegenius.net/v1/PG-2026Q2-pg10000a';
 function showSaved(){const el=g('save-ind');el.textContent='✓ Saved';el.style.opacity='1';el.setAttribute('data-origin',__PG_ORIGIN__);clearTimeout(saveTimer);saveTimer=setTimeout(()=>{el.style.opacity='0';},2000);}
 
 // ---- Price import (PDF) mode ----
@@ -3772,7 +3774,7 @@ function applyHostBanner(){
     bar.id='tmp-host-banner';
     bar.style.cssText='margin:0 0 12px;padding:10px 14px;background:var(--info-amber-bg);border:1px solid var(--info-amber-border);border-radius:10px;color:var(--info-amber-fg2);font-size:12px;display:flex;align-items:center;gap:10px;line-height:1.5';
     bar.innerHTML='<span style="font-size:16px;flex-shrink:0">ℹ️</span>'
-      +'<span style="flex:1">This copy of PeptideGenius is running on <code>'+escH(host)+'</code>, which isn\'t one of the recognised hosts. The app still works locally — no data leaves your device. If this is an unofficial mirror, the canonical version lives at <a href="https://peptidegenius.com" style="color:var(--info-amber-fg);text-decoration:underline">peptidegenius.com</a>.</span>'
+      +'<span style="flex:1">This copy of PeptideGenius is running on <code>'+escH(host)+'</code>, which isn\'t one of the recognised hosts. The app still works locally — no data leaves your device. If this is an unofficial mirror, the canonical version lives at <a href="https://peptidegenius.net" style="color:var(--info-amber-fg);text-decoration:underline">peptidegenius.net</a>.</span>'
       +'<button class="btn" type="button" style="padding:3px 10px;font-size:11px;flex-shrink:0">Dismiss</button>';
     bar.querySelector('button').addEventListener('click',()=>{
       try{sessionStorage.setItem('tmp_host_banner_dismissed','1');}catch(e){}
@@ -9836,8 +9838,97 @@ init();
     <div style="font-weight:700;color:var(--color-text-primary);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Disclaimer</div>
     PeptideGenius is a personal tracking tool, not medical advice, diagnosis, or treatment. Nothing here is reviewed by a licensed clinician. Most peptides discussed are <em>research compounds</em> — not FDA-approved for human use outside of specific prescription contexts. Always consult a qualified healthcare professional before starting, changing, or stopping any protocol. You are solely responsible for your own choices, sourcing, sterility, and injection technique. Use of this tool means you accept all risk.
   </div>
-  <div>© 2026 <a href="https://peptidegenius.com" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.com</a> · All rights reserved · <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
+  <div>© 2026 <a href="https://peptidegenius.net" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.net</a> · All rights reserved · <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
   <div style="margin-top:3px;opacity:.6;font-size:9.5px;letter-spacing:.05em">Unauthorized redistribution prohibited · PG-2026Q2</div>
 </footer>
+<!-- Stripe Payment Integration -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// Initialize Stripe
+const stripe = Stripe('pk_test_51TPZGOJV29xVu1Y6SIuJvztnTKOCxBA0Q1s7zL0AQXJ9XN7AKq2rqhb8FxAqAX9nPXufdJih17Elxe46JtIDqZIa00i2IQeNip');
+
+// Track selected plan
+let selectedPlan = null;
+
+// Handle plan selection
+document.querySelectorAll('[data-plan-btn]').forEach(btn => {
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    selectedPlan = this.getAttribute('data-plan-btn');
+    // Change button text to show selection
+    document.querySelectorAll('[data-plan-btn]').forEach(b => b.style.opacity = '0.7');
+    this.style.opacity = '1';
+  });
+});
+
+// Handle purchase button
+document.getElementById('upgrade-purchase-btn')?.addEventListener('click', async function(){
+  if (!selectedPlan) {
+    alert('Please select a plan first.');
+    return;
+  }
+
+  // Get user email (could be from form or prompt)
+  const email = prompt('Enter your email address:');
+  if (!email) return;
+
+  // Show loading state
+  this.disabled = true;
+  this.textContent = 'Processing...';
+
+  try {
+    // Call Firebase Cloud Function to create checkout session
+    const response = await fetch(
+      'https://us-central1-peptide-genius.cloudfunctions.net/createCheckoutSession',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: {
+            plan: selectedPlan,
+            email: email
+          }
+        })
+      }
+    );
+
+    const result = await response.json();
+    
+    if (result.result?.sessionId) {
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: result.result.sessionId
+      });
+      
+      if (error) {
+        alert('Error: ' + error.message);
+        this.disabled = false;
+        this.textContent = 'Continue to Payment';
+      }
+    } else {
+      alert('Error creating checkout session. Please try again.');
+      this.disabled = false;
+      this.textContent = 'Continue to Payment';
+    }
+  } catch (err) {
+    console.error('Payment error:', err);
+    alert('Payment error. Please try again.');
+    this.disabled = false;
+    this.textContent = 'Continue to Payment';
+  }
+});
+
+// Check for payment success in URL
+window.addEventListener('load', function(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') {
+    alert('✓ Payment successful! Check your email for your license key.');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (params.get('payment') === 'cancel') {
+    alert('Payment cancelled. You can try again anytime.');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+});
+</script>
 </body>
 </html>
