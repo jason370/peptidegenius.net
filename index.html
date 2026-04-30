@@ -2457,17 +2457,13 @@ const PG = (function(){
     }
   }
 
-  // STUB — replace with real validation when payment is wired up.
-  // Real impl: POST {key} to your /api/license/validate endpoint
-  // backed by LemonSqueezy / Gumroad / Stripe license API.
+  // Replace with real validation when payment backend is ready.
+  // Real impl: POST {key} to your Firebase /validateLicense endpoint.
   async function validateKey(key){
     if (!key || key.length < 6) return { ok:false, reason:'Key too short' };
-    // Dev/test keys for now — remove these when going live.
-    const devKeys = ['PG-DEV-LIFETIME','PG-DEV-PRO','PG-TEST-1234'];
-    if (devKeys.includes(key.toUpperCase())) return { ok:true, plan:'lifetime' };
-    // Default stub: accept any key for testing the UI flow.
-    // CHANGE THIS LINE before launch:
-    return { ok:true, plan:'unverified' };
+    // TODO: Wire up to Firebase validateLicense endpoint
+    // For now, reject all keys until payment is live
+    return { ok:false, reason:'Payment system coming soon. Stay tuned!' };
   }
 
   function countActivePeptides(){
@@ -2608,7 +2604,7 @@ document.addEventListener('DOMContentLoaded', function(){
       console.log('[Upgrade Modal] Plan selected:', plan);
       // Stub for now — would redirect to payment processor (Stripe, LemonSqueezy, etc.)
       // For testing: just show a message
-      alert(`Plan selected: ${plan}\n\nPayment integration coming soon.\n\nFor now, use a dev key like "PG-DEV-LIFETIME" to test Pro features.`);
+      alert(`${plan.charAt(0).toUpperCase() + plan.slice(1)} plan selected!\n\nPayment processing is coming soon. We'll notify you when it's ready.\n\nEmail PeptideGenius@gmail.com for early access.`);
     });
   });
 
@@ -2638,7 +2634,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const purchaseBtn = document.getElementById('upgrade-purchase-btn');
   if (purchaseBtn) {
     purchaseBtn.addEventListener('click', function(){
-      alert('Payment integration coming soon.\n\nFor now, use a dev key to test:\n\n• PG-DEV-LIFETIME\n• PG-DEV-PRO\n• PG-TEST-1234');
+      alert('Payment processing is coming soon!\n\nWe\'ll notify you when Pro is available for purchase.\n\nEmail PeptideGenius@gmail.com for early access.');
     });
   }
 }, { once: true });
