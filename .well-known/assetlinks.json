@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.pwabuilder.peptidegeniusnet",
+        "sha256_cert_fingerprints": ["52:AE:5D:C8:E3:02:DE:F2:00:69:B1:7C:48:8F:03:9A:C4:4C:18:6F:CF:B2:9C:51:E0:13:D9:4E:F8:7D:66:2A"]
+      }
+    }]
