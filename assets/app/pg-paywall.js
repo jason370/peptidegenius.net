@@ -27,6 +27,7 @@
   // Netlify function endpoints (same origin on peptidegenius.net)
   const PG_VALIDATE_LICENSE_URL = global.PG_VALIDATE_LICENSE_URL || '/.netlify/functions/pg-validate-license';
   const PG_FULFILL_URL = global.PG_FULFILL_URL || '/.netlify/functions/pg-fulfill';
+  const PG_CREATE_CHECKOUT_URL = global.PG_CREATE_CHECKOUT_URL || '/.netlify/functions/pg-create-checkout';
 
   let _key = null;
   let _isPro = false;
@@ -222,15 +223,44 @@
       }
     });
 
+    async function startCheckout(plan){
+      const email = window.prompt('Enter the email for your license key receipt:');
+      if (email === null) return; // cancelled
+      const trimmed = String(email || '').trim();
+      if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      try {
+        const res = await fetch(PG_CREATE_CHECKOUT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: plan || 'yearly', email: trimmed || undefined })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) {
+          throw new Error(data.error || 'Could not start checkout');
+        }
+        window.location.href = data.url;
+      } catch (err) {
+        // Fallback to Payment Link only if checkout API is unavailable
+        const link = STRIPE_LINKS[plan];
+        if (link && /STRIPE_SECRET_KEY|not configured/i.test(String(err.message || ''))) {
+          alert('Checkout is almost ready — Stripe secret key still needs to be added in Netlify. Opening payment page for now (license key auto-issue needs the secret key).');
+          window.open(link, '_blank');
+          return;
+        }
+        alert('Checkout error: ' + (err.message || err));
+      }
+    }
+
     document.querySelectorAll('[data-plan-btn]').forEach(btn => {
       btn.addEventListener('click', function(){
         const plan = this.getAttribute('data-plan-btn');
         global._selectedUpgradePlan = plan;
         document.querySelectorAll('[data-plan-btn]').forEach(b => { b.style.opacity = '0.7'; });
         this.style.opacity = '1';
-        const link = STRIPE_LINKS[plan];
-        if (link) window.open(link, '_blank');
-        else alert('Plan not found. Please email PeptideGenius@gmail.com for help.');
+        startCheckout(plan);
       });
     });
 
@@ -262,7 +292,7 @@
     if (purchaseBtn) {
       purchaseBtn.addEventListener('click', function(){
         const plan = global._selectedUpgradePlan || 'yearly';
-        window.open(STRIPE_LINKS[plan] || STRIPE_LINKS.monthly, '_blank');
+        startCheckout(plan);
       });
     }
 
@@ -280,10 +310,12 @@
         const data = await PG.fulfillSession(sessionId);
         alert(
           '✓ Payment confirmed!\n\nYour license key:\n' + data.licenseKey +
-          '\n\nPro is unlocked on this device. Save this key — you can Restore it anytime from the Pro dialog.' +
-          (data.emailSent ? '\n\nA copy was also emailed to ' + (data.email || 'you') + '.' : '\n\n(Email delivery may still be configuring — keep this key.)')
+          '\n\nPro is unlocked on this device. Save this key — Restore it anytime from the Pro dialog.' +
+          (data.emailSent ? '\n\nA copy was emailed to ' + (data.email || 'you') + '.' : '\n\nSave this key now (email copy sends when SendGrid is configured).')
         );
         updateTrialBanner();
+        if (typeof global.refreshAppState === 'function') global.refreshAppState();
+        else if (typeof global.rr === 'function') global.rr();
       } catch (e) {
         alert('Payment received, but license issue failed: ' + (e.message || e) + '\n\nEmail PeptideGenius@gmail.com with your Stripe receipt.');
       }
@@ -292,7 +324,7 @@
     }
 
     if (status === 'success') {
-      alert('✓ Payment successful! If you were not shown a license key, open your Stripe receipt, copy the Checkout Session ID (cs_...), and visit:\n\nhttps://peptidegenius.net/?session_id=cs_XXX&status=success');
+      alert('✓ Payment successful! Your license key should appear automatically after checkout. If it did not, email PeptideGenius@gmail.com with your receipt.');
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (status === 'cancel') {
       alert('Payment cancelled. You can try again anytime.');
