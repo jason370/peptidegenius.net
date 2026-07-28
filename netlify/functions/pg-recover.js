@@ -49,7 +49,8 @@ exports.handler = async function (event) {
     for (const s of sessions) {
       const result = await fulfillCheckoutSession(s.id, {
         source: 'pg-recover',
-        sendEmail: true
+        sendEmail: true,
+        event
       });
       issued.push({
         sessionId: s.id,

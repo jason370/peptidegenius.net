@@ -20,7 +20,7 @@ exports.handler = async function (event) {
       return json(400, { ok: false, valid: false, error: 'No license key provided' });
     }
 
-    const store = await getLicenseStore();
+    const store = await getLicenseStore(event);
     const license = await readLicenseByKey(store, licenseKey);
     if (!license) {
       return json(200, { ok: false, valid: false, error: 'License key not found' });

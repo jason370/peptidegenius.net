@@ -77,8 +77,13 @@ async function stripeGet(path) {
   return data;
 }
 
-async function getLicenseStore() {
-  const { getStore } = require('@netlify/blobs');
+async function getLicenseStore(event) {
+  const { getStore, connectLambda } = require('@netlify/blobs');
+  // Required for classic Netlify Functions (AWS Lambda compat) so Blobs
+  // can read siteID/token from the request environment.
+  if (event && typeof connectLambda === 'function') {
+    try { connectLambda(event); } catch (_) {}
+  }
   return getStore({ name: 'pg-licenses', consistency: 'strong' });
 }
 
@@ -156,7 +161,7 @@ async function fulfillCheckoutSession(sessionId, opts) {
     throw Object.assign(new Error('Valid Stripe checkout session id required'), { status: 400 });
   }
 
-  const store = await getLicenseStore();
+  const store = await getLicenseStore(options.event);
   const existing = await readLicenseBySession(store, sessionId);
   if (existing && existing.active) {
     return { license: existing, created: false, emailResult: { sent: false, reason: 'already issued' } };

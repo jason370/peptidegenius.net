@@ -15,7 +15,11 @@ exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || '{}');
     const sessionId = String(body.sessionId || body.session_id || '').trim();
-    const result = await fulfillCheckoutSession(sessionId, { source: 'pg-fulfill', sendEmail: true });
+    const result = await fulfillCheckoutSession(sessionId, {
+      source: 'pg-fulfill',
+      sendEmail: true,
+      event
+    });
     return json(200, {
       ok: true,
       created: result.created,
