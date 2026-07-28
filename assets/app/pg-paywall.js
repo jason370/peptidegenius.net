@@ -1,7 +1,6 @@
 /* ============================================================
    PeptideGenius License Manager (Pro paywall)
-   Ported from peptide_genius.html — keep in sync with Firebase
-   checkout / validateLicense when wiring live validation.
+   Stripe Payment Links + Netlify license fulfill/validate.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -24,6 +23,10 @@
     yearly:   'https://buy.stripe.com/8x26oI8OD7cqbtv3Iy5sA01',
     lifetime: 'https://buy.stripe.com/fZu4gA7Kz2Wa8hj7YO5sA02'
   };
+
+  // Netlify function endpoints (same origin on peptidegenius.net)
+  const PG_VALIDATE_LICENSE_URL = global.PG_VALIDATE_LICENSE_URL || '/.netlify/functions/pg-validate-license';
+  const PG_FULFILL_URL = global.PG_FULFILL_URL || '/.netlify/functions/pg-fulfill';
 
   let _key = null;
   let _isPro = false;
@@ -61,28 +64,25 @@
       _persist();
     }
   }
+
   async function validateKey(key){
     if (!key || key.length < 6) return { ok:false, reason:'Key too short' };
-    // Prefer Firebase validateLicense when configured; otherwise keep stub.
-    const endpoint = global.PG_VALIDATE_LICENSE_URL;
-    if (endpoint) {
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ licenseKey: key })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && (data.valid === true || data.ok === true)) {
-          return { ok:true };
-        }
-        return { ok:false, reason: data.reason || data.error || 'Invalid license key.' };
-      } catch (e) {
-        return { ok:false, reason: 'Could not reach license server. Try again.' };
+    try {
+      const res = await fetch(PG_VALIDATE_LICENSE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey: key })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.valid === true || data.ok === true)) {
+        return { ok:true, plan: data.plan || null };
       }
+      return { ok:false, reason: data.reason || data.error || 'Invalid license key.' };
+    } catch (e) {
+      return { ok:false, reason: 'Could not reach license server. Try again.' };
     }
-    return { ok:false, reason:'Payment system coming soon. Stay tuned!' };
   }
+
   function countActivePeptides(){
     const S = global.S;
     if (!S || !Array.isArray(S.inv)) return 0;
@@ -108,6 +108,14 @@
       const r = await validateKey(key);
       if (r.ok){ _key = key; _isPro = true; _persist(); }
       return r;
+    },
+    /** Activate without server round-trip after fulfill already validated issuance */
+    activateIssuedKey(key){
+      if (!key) return false;
+      _key = key;
+      _isPro = true;
+      _persist();
+      return true;
     },
     deactivate(){ _key = null; _isPro = false; _persist(); },
     countActivePeptides,
@@ -138,6 +146,19 @@
           + PG_PRICING.lifetime.label);
       }
     },
+    async fulfillSession(sessionId){
+      const res = await fetch(PG_FULFILL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.licenseKey) {
+        throw new Error(data.error || 'Could not issue license key');
+      }
+      PG.activateIssuedKey(data.licenseKey);
+      return data;
+    },
     LIMITS: PG_FREE_LIMITS,
     PRICING: PG_PRICING,
     STRIPE_LINKS
@@ -146,6 +167,8 @@
   global.PG = PG;
   global.PG_FREE_LIMITS = PG_FREE_LIMITS;
   global.PG_PRICING = PG_PRICING;
+  global.PG_VALIDATE_LICENSE_URL = PG_VALIDATE_LICENSE_URL;
+  global.PG_FULFILL_URL = PG_FULFILL_URL;
   PG.init();
 
   function updateTrialBanner(){
@@ -217,15 +240,20 @@
       restoreBtn.addEventListener('click', async function(){
         const key = keyInput.value.trim();
         if (!key) { alert('Please enter a license key.'); return; }
-        const result = await PG.activate(key);
-        if (result.ok) {
-          alert('✓ License activated! Pro features are now unlocked.');
-          global.hideUpgradeModal();
-          updateTrialBanner();
-          if (typeof global.refreshAppState === 'function') global.refreshAppState();
-          else if (typeof global.rr === 'function') global.rr();
-        } else {
-          alert('✗ ' + (result.reason || 'Invalid license key.'));
+        restoreBtn.disabled = true;
+        try {
+          const result = await PG.activate(key);
+          if (result.ok) {
+            alert('✓ License activated! Pro features are now unlocked.');
+            global.hideUpgradeModal();
+            updateTrialBanner();
+            if (typeof global.refreshAppState === 'function') global.refreshAppState();
+            else if (typeof global.rr === 'function') global.rr();
+          } else {
+            alert('✗ ' + (result.reason || 'Invalid license key.'));
+          }
+        } finally {
+          restoreBtn.disabled = false;
         }
       });
     }
@@ -242,6 +270,36 @@
     if (openBtn) openBtn.addEventListener('click', function(){ PG.openUpgrade('header'); });
   }
 
+  async function handleCheckoutReturn(){
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || params.get('sessionId');
+    const status = params.get('status') || params.get('payment');
+
+    if (sessionId && String(sessionId).startsWith('cs_')) {
+      try {
+        const data = await PG.fulfillSession(sessionId);
+        alert(
+          '✓ Payment confirmed!\n\nYour license key:\n' + data.licenseKey +
+          '\n\nPro is unlocked on this device. Save this key — you can Restore it anytime from the Pro dialog.' +
+          (data.emailSent ? '\n\nA copy was also emailed to ' + (data.email || 'you') + '.' : '\n\n(Email delivery may still be configuring — keep this key.)')
+        );
+        updateTrialBanner();
+      } catch (e) {
+        alert('Payment received, but license issue failed: ' + (e.message || e) + '\n\nEmail PeptideGenius@gmail.com with your Stripe receipt.');
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (status === 'success') {
+      alert('✓ Payment successful! If you were not shown a license key, open your Stripe receipt, copy the Checkout Session ID (cs_...), and visit:\n\nhttps://peptidegenius.net/?session_id=cs_XXX&status=success');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (status === 'cancel') {
+      alert('Payment cancelled. You can try again anytime.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
   function onReady(fn){
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once:true });
     else fn();
@@ -253,13 +311,6 @@
   });
 
   window.addEventListener('load', function(){
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success' || params.get('status') === 'success') {
-      alert('✓ Payment successful! Check your email for your license key.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (params.get('payment') === 'cancel') {
-      alert('Payment cancelled. You can try again anytime.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    handleCheckoutReturn();
   });
 })(typeof window !== 'undefined' ? window : globalThis);
