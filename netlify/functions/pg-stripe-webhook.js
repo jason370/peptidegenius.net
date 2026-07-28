@@ -23,8 +23,7 @@ exports.handler = async function (event) {
       if (sessionId) {
         const result = await fulfillCheckoutSession(sessionId, {
           source: 'stripe-webhook',
-          sendEmail: true,
-          event
+          sendEmail: true
         });
         console.log('[pg-stripe-webhook] fulfilled', sessionId, result.license.key, 'created=', result.created);
       }

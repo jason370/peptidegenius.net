@@ -1,8 +1,7 @@
 const {
   json,
   corsHeaders,
-  getLicenseStore,
-  readLicenseByKey
+  validateLicenseKey
 } = require('../lib/pg-license');
 
 exports.handler = async function (event) {
@@ -15,26 +14,25 @@ exports.handler = async function (event) {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const licenseKey = String(body.licenseKey || body.key || '').trim().toUpperCase();
+    const licenseKey = String(body.licenseKey || body.key || '').trim();
     if (!licenseKey || licenseKey.length < 6) {
       return json(400, { ok: false, valid: false, error: 'No license key provided' });
     }
 
-    const store = await getLicenseStore(event);
-    const license = await readLicenseByKey(store, licenseKey);
-    if (!license) {
-      return json(200, { ok: false, valid: false, error: 'License key not found' });
-    }
-    if (!license.active) {
-      return json(200, { ok: false, valid: false, error: 'License is inactive' });
+    const result = await validateLicenseKey(licenseKey);
+    if (!result.valid) {
+      return json(200, {
+        ok: false,
+        valid: false,
+        error: result.error || 'Invalid license key'
+      });
     }
 
     return json(200, {
       ok: true,
       valid: true,
-      plan: license.plan,
-      email: license.email || null,
-      createdAt: license.createdAt || null
+      plan: result.plan,
+      email: result.email || null
     });
   } catch (err) {
     console.error('[pg-validate-license]', err);

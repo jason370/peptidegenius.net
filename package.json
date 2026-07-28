@@ -2,8 +2,5 @@
   "name": "peptidegenius-net",
   "private": true,
   "version": "1.0.0",
-  "description": "PeptideGenius.net static app + Netlify Pro license functions",
-  "dependencies": {
-    "@netlify/blobs": "^8.1.0"
-  }
+  "description": "PeptideGenius.net static app + Netlify Pro license functions"
 }

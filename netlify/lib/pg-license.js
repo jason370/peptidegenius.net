@@ -1,8 +1,9 @@
 /**
- * Shared PeptideGenius Pro license helpers for Netlify functions.
- * Storage: Netlify Blobs (store name: pg-licenses)
- * Keys: session:{stripeSessionId} -> license record
- *       key:{LICENSE_KEY} -> license record
+ * PeptideGenius Pro license helpers (Netlify functions).
+ * Licenses are signed tokens derived from a paid Stripe Checkout Session.
+ * No database required — validation checks HMAC (+ optional live Stripe re-check).
+ *
+ * Key format: PG1.<base64url-payload>.<base64url-hmac>
  */
 
 const crypto = require('crypto');
@@ -24,14 +25,25 @@ function json(statusCode, body) {
   };
 }
 
-function generateLicenseKey() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const chunk = () => {
-    let s = '';
-    for (let i = 0; i < 5; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
-    return s;
-  };
-  return `PG-${chunk()}-${chunk()}-${chunk()}`;
+function signingSecret() {
+  const explicit = process.env.LICENSE_SIGNING_SECRET || process.env.RECOVER_SECRET;
+  if (explicit) return explicit;
+  const stripe = process.env.STRIPE_SECRET_KEY;
+  if (stripe) {
+    return crypto.createHash('sha256').update(`pg-license|${stripe}`).digest('hex');
+  }
+  throw new Error('Set STRIPE_SECRET_KEY (or LICENSE_SIGNING_SECRET) in Netlify env');
+}
+
+function b64url(input) {
+  return Buffer.from(input).toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function fromB64url(str) {
+  const pad = str.length % 4 === 0 ? '' : '='.repeat(4 - (str.length % 4));
+  const s = str.replace(/-/g, '+').replace(/_/g, '/') + pad;
+  return Buffer.from(s, 'base64').toString('utf8');
 }
 
 function detectPlan(session) {
@@ -41,14 +53,12 @@ function detectPlan(session) {
   const amount = Number(
     (session && (session.amount_total != null ? session.amount_total : session.amount_subtotal)) || 0
   );
-  // cents
   if (amount >= 7000) return 'lifetime';
   if (amount >= 4000) return 'yearly';
   if (amount >= 400) return 'monthly';
 
-  const mode = session && session.mode;
-  if (mode === 'subscription') return 'monthly';
-  if (mode === 'payment') return 'lifetime';
+  if (session && session.mode === 'subscription') return 'monthly';
+  if (session && session.mode === 'payment') return 'lifetime';
   return 'monthly';
 }
 
@@ -61,45 +71,71 @@ function sessionEmail(session) {
   );
 }
 
+function makeLicenseKey(session) {
+  const payloadObj = {
+    sid: session.id,
+    e: sessionEmail(session) || '',
+    p: detectPlan(session),
+    iat: Math.floor(Date.now() / 1000)
+  };
+  // Deterministic body (no iat) so re-fulfill returns the same key
+  const stable = {
+    sid: payloadObj.sid,
+    e: payloadObj.e,
+    p: payloadObj.p
+  };
+  const payload = b64url(JSON.stringify(stable));
+  const sig = b64url(
+    crypto.createHmac('sha256', signingSecret()).update(payload).digest()
+  );
+  return `PG1.${payload}.${sig}`;
+}
+
+function parseAndVerifyKey(licenseKey) {
+  const raw = String(licenseKey || '').trim();
+  const parts = raw.split('.');
+  if (parts.length !== 3 || parts[0] !== 'PG1') {
+    return { ok: false, reason: 'Invalid license key format' };
+  }
+  const payload = parts[1];
+  const sig = parts[2];
+  const expected = b64url(
+    crypto.createHmac('sha256', signingSecret()).update(payload).digest()
+  );
+  const a = Buffer.from(expected);
+  const b = Buffer.from(sig);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return { ok: false, reason: 'Invalid license key signature' };
+  }
+  let data;
+  try {
+    data = JSON.parse(fromB64url(payload));
+  } catch (_) {
+    return { ok: false, reason: 'Corrupt license payload' };
+  }
+  if (!data.sid || !String(data.sid).startsWith('cs_')) {
+    return { ok: false, reason: 'License missing checkout session' };
+  }
+  return {
+    ok: true,
+    sessionId: data.sid,
+    email: data.e || '',
+    plan: data.p || 'monthly'
+  };
+}
+
 async function stripeGet(path) {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error('STRIPE_SECRET_KEY is not configured in Netlify env');
+  if (!key) throw Object.assign(new Error('STRIPE_SECRET_KEY is not configured in Netlify env'), { status: 500 });
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     headers: { Authorization: `Bearer ${key}` }
   });
   const data = await res.json();
   if (!res.ok) {
     const msg = (data && data.error && data.error.message) || `Stripe error ${res.status}`;
-    const err = new Error(msg);
-    err.status = res.status;
-    throw err;
+    throw Object.assign(new Error(msg), { status: res.status });
   }
   return data;
-}
-
-async function getLicenseStore(event) {
-  const { getStore, connectLambda } = require('@netlify/blobs');
-  // Required for classic Netlify Functions (AWS Lambda compat) so Blobs
-  // can read siteID/token from the request environment.
-  if (event && typeof connectLambda === 'function') {
-    try { connectLambda(event); } catch (_) {}
-  }
-  return getStore({ name: 'pg-licenses', consistency: 'strong' });
-}
-
-async function readLicenseBySession(store, sessionId) {
-  const raw = await store.get(`session:${sessionId}`, { type: 'json' });
-  return raw || null;
-}
-
-async function readLicenseByKey(store, licenseKey) {
-  const raw = await store.get(`key:${licenseKey}`, { type: 'json' });
-  return raw || null;
-}
-
-async function writeLicense(store, record) {
-  await store.setJSON(`session:${record.stripeSessionId}`, record);
-  await store.setJSON(`key:${record.key}`, record);
 }
 
 async function sendLicenseEmail(email, licenseKey, planName) {
@@ -118,8 +154,8 @@ async function sendLicenseEmail(email, licenseKey, planName) {
     </div>
     <div style="background:#F9FAFB;padding:20px;border-radius:8px;margin-top:18px">
       <p>Your <strong>${planName}</strong> purchase is confirmed. Your license key:</p>
-      <div style="background:#fff;border:2px dashed #E9D5FF;padding:18px;border-radius:8px;text-align:center;margin:18px 0">
-        <div style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:2px;color:#4F46E5">${licenseKey}</div>
+      <div style="background:#fff;border:2px dashed #E9D5FF;padding:18px;border-radius:8px;text-align:center;margin:18px 0;word-break:break-all">
+        <div style="font-family:monospace;font-size:14px;font-weight:700;color:#4F46E5">${licenseKey}</div>
       </div>
       <ol>
         <li>Open <a href="https://peptidegenius.net">peptidegenius.net</a></li>
@@ -152,19 +188,10 @@ async function sendLicenseEmail(email, licenseKey, planName) {
   return { sent: true };
 }
 
-/**
- * Idempotent fulfillment for a paid Stripe Checkout Session.
- */
 async function fulfillCheckoutSession(sessionId, opts) {
   const options = opts || {};
   if (!sessionId || !String(sessionId).startsWith('cs_')) {
     throw Object.assign(new Error('Valid Stripe checkout session id required'), { status: 400 });
-  }
-
-  const store = await getLicenseStore(options.event);
-  const existing = await readLicenseBySession(store, sessionId);
-  if (existing && existing.active) {
-    return { license: existing, created: false, emailResult: { sent: false, reason: 'already issued' } };
   }
 
   const session = await stripeGet(`checkout/sessions/${encodeURIComponent(sessionId)}`);
@@ -179,8 +206,8 @@ async function fulfillCheckoutSession(sessionId, opts) {
 
   const email = sessionEmail(session);
   const plan = detectPlan(session);
-  const key = generateLicenseKey();
-  const record = {
+  const key = makeLicenseKey(session);
+  const license = {
     key,
     email,
     plan,
@@ -191,14 +218,43 @@ async function fulfillCheckoutSession(sessionId, opts) {
     source: options.source || 'fulfill'
   };
 
-  await writeLicense(store, record);
-
   let emailResult = { sent: false, reason: 'skipped' };
   if (options.sendEmail !== false) {
     emailResult = await sendLicenseEmail(email, key, `PeptideGenius Pro ${plan}`);
   }
 
-  return { license: record, created: true, emailResult };
+  return { license, created: true, emailResult };
+}
+
+async function validateLicenseKey(licenseKey, opts) {
+  const options = opts || {};
+  const parsed = parseAndVerifyKey(licenseKey);
+  if (!parsed.ok) return { ok: false, valid: false, error: parsed.reason };
+
+  // Live re-check against Stripe so refunds/cancellations can revoke access
+  if (options.recheckStripe !== false) {
+    try {
+      const session = await stripeGet(`checkout/sessions/${encodeURIComponent(parsed.sessionId)}`);
+      const paid =
+        session.payment_status === 'paid' ||
+        session.status === 'complete' ||
+        session.payment_status === 'no_payment_required';
+      if (!paid) {
+        return { ok: false, valid: false, error: 'Payment is no longer active' };
+      }
+    } catch (err) {
+      // If Stripe is briefly down, still accept cryptographically valid keys
+      console.warn('[pg-license] Stripe recheck failed, accepting signed key:', err.message);
+    }
+  }
+
+  return {
+    ok: true,
+    valid: true,
+    plan: parsed.plan,
+    email: parsed.email || null,
+    sessionId: parsed.sessionId
+  };
 }
 
 function verifyStripeWebhook(rawBody, signatureHeader) {
@@ -223,7 +279,6 @@ function verifyStripeWebhook(rawBody, signatureHeader) {
     throw new Error('Webhook signature verification failed');
   }
 
-  // Reject extreme skew (5 minutes)
   const age = Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp));
   if (age > 300) throw new Error('Webhook timestamp too old');
 }
@@ -231,15 +286,13 @@ function verifyStripeWebhook(rawBody, signatureHeader) {
 module.exports = {
   corsHeaders,
   json,
-  generateLicenseKey,
   detectPlan,
   sessionEmail,
   stripeGet,
-  getLicenseStore,
-  readLicenseByKey,
-  readLicenseBySession,
-  writeLicense,
   sendLicenseEmail,
   fulfillCheckoutSession,
-  verifyStripeWebhook
+  validateLicenseKey,
+  verifyStripeWebhook,
+  makeLicenseKey,
+  parseAndVerifyKey
 };
