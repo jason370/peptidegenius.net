@@ -5960,12 +5960,10 @@ window.__tmpPgDebounced=function(key,fn,ms){
   }
   function wire(){
     var logo=document.querySelector('img.gpt-site-logo');
+    // Do not steal clicks from core.js triple-tap (Save backup / Import reveal).
+    // core.js already handles single-tap → scroll top and triple-tap → backup buttons.
     if(!logo||logo.dataset.homeTopWired==='1') return;
     logo.dataset.homeTopWired='1';
-    logo.addEventListener('click',function(e){
-      e.preventDefault();
-      goTop();
-    });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire);
   else wire();

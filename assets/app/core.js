@@ -9337,6 +9337,22 @@ function maybeAutoFetchTracking(){
       wrap.style.display='none';
     });
     lim.addEventListener('click',()=>{g('import-file').click();});
+    // Always-visible header Backup / Import (same handlers as logo reveal)
+    const hdrBackup=document.getElementById('hdr-backup-btn');
+    const hdrImport=document.getElementById('hdr-import-btn');
+    if(hdrBackup){
+      hdrBackup.addEventListener('click',()=>{
+        if(typeof window.doExport!=='function'){alert('Please wait for the app to finish loading, then try again.');return;}
+        window.doExport('my-tracker-manual-');
+      });
+    }
+    if(hdrImport){
+      hdrImport.addEventListener('click',()=>{
+        const inp=g('import-file');
+        if(!inp){alert('Import control missing — hard refresh and try again.');return;}
+        inp.click();
+      });
+    }
   })();
   g('import-file').addEventListener('change',e=>{
     const f=e.target.files&&e.target.files[0];if(!f){e.target.value='';return;}
