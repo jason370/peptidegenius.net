@@ -1469,6 +1469,23 @@ function runPeptideTrackerImport(text,clearFileInput){
   S._supplies_seeded=true;
   S._mig=true;
   S._hadSaved=true;
+  // Full backup import must restore Weekly Calendar / Daily Stack. If the
+  // calendar clear-lock is active, save() pre-hooks prune S.sched down to an
+  // allow-list (usually empty after a fresh PG session) and the imported
+  // schedule never appears. Clear the lock and allow every imported peptide.
+  try{
+    if(window.tmpCalClearGuard){
+      const names=(S.inv||[]).map(i=>i&&i.name).filter(Boolean);
+      Object.keys(S.sched||{}).forEach(k=>{
+        const n=String(k||'').split('/')[0];
+        if(n) names.push(n);
+      });
+      tmpCalClearGuard.clear();
+      // If something re-marks the lock before save finishes, still allow names.
+      names.forEach(n=>{try{tmpCalClearGuard.allowName(n);}catch(_){}});
+    }
+  }catch(_){}
+  try{window._tmpBypassCalEnforce=true;}catch(_){}
   // CRITICAL: saveNow() calls reconcileFromDisk() before writing. If the imported
   // backup has an older/missing _saveRev than what's already in localStorage,
   // reconcile would overwrite the import with the previous (often empty) state.
@@ -1480,7 +1497,11 @@ function runPeptideTrackerImport(text,clearFileInput){
     const importRev=Number(S._saveRev)||0;
     S._saveRev=Math.max(diskRev,importRev)+1;
   }catch(_){S._saveRev=(Number(S._saveRev)||0)+1;}
-  saveNow(); // must be synchronous: the verify below reads localStorage right back
+  try{
+    saveNow(); // must be synchronous: the verify below reads localStorage right back
+  }finally{
+    try{window._tmpBypassCalEnforce=false;}catch(_){}
+  }
   const verifyRaw=localStorage.getItem('peptide_tracker');
   let verified=false;
   try{
@@ -1492,18 +1513,29 @@ function runPeptideTrackerImport(text,clearFileInput){
     renderInv(true);
     renderVials(true);
     try{if(typeof renderLog==='function')renderLog();}catch(_){}
+    try{if(typeof renderStack==='function')renderStack();}catch(_){}
     try{if(typeof renderCal==='function')renderCal({force:true});}catch(_){}
     rr();
-    // Land on Inventory so the user immediately sees imported peptides/vials.
+    // Land on Weekly Calendar so imported schedule is obvious.
     try{
-      const invBtn=document.querySelector('#nav [data-pg="inventory"]');
-      if(invBtn)invBtn.click();
+      const calBtn=document.querySelector('#nav [data-pg="calendar"]');
+      if(calBtn)calBtn.click();
+      setTimeout(function(){
+        try{if(typeof renderCal==='function')renderCal({force:true});}catch(_){}
+      },80);
     }catch(_){}
   }catch(err){console.error('Render after import:',err);}
   const loadedVialN=(S.vials||[]).length;
   const loadedShotN=(S.shots||[]).length;
+  let loadedSchedN=0;
+  try{
+    loadedSchedN=Object.keys(S.sched||{}).filter(k=>{
+      const v=S.sched[k];
+      return v===true||(v&&typeof v==='object');
+    }).length;
+  }catch(_){}
   if(verified){
-    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+(loadedShotN?' + '+loadedShotN+' shots':'')+' loaded and saved.');
+    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+(loadedShotN?' + '+loadedShotN+' shots':'')+(loadedSchedN?' + '+loadedSchedN+' calendar slots':'')+' loaded and saved.');
   }else{
     alert('⚠️ Import loaded in memory but browser save verify failed. Try Import again, or use a different browser. (Inventory now shows what was loaded.)');
   }
