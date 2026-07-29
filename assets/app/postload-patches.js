@@ -1,4 +1,4 @@
-﻿// TrackMyPeps post-core patch runtime
+﻿// PeptideGenius post-core patch runtime
 
 // ── Mutation-quiet guard (freeze fix, 20260706) ──────────────────────────────
 // Several patches below watch #ap (and document.body) with MutationObservers
@@ -2906,7 +2906,7 @@ window.__tmpPgDebounced=function(key,fn,ms){
       + '<b>Newest backup contains:</b> ' + summary + ' (saved ' + ago + ')'
       + '<ul>'
       +   '<li>Click <b>Restore backup</b> to replace your current empty state with this snapshot.</li>'
-      +   '<li>Click <b>Skip / start fresh</b> to ignore the backup and use TrackMyPeps as if new.</li>'
+      +   '<li>Click <b>Skip / start fresh</b> to ignore the backup and use PeptideGenius as if new.</li>'
       + '</ul>';
     if (backups.length > 1){
       html += '<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600;font-size:11.5px">'
@@ -3140,7 +3140,7 @@ window.__tmpPgDebounced=function(key,fn,ms){
     },
     change: {
       title: 'You made an important change',
-      sub: 'Want to back up your data now? A JSON file is the safest way to keep TrackMyPeps recoverable.'
+      sub: 'Want to back up your data now? A JSON file is the safest way to keep PeptideGenius recoverable.'
     }
   };
 
@@ -5534,7 +5534,7 @@ window.__tmpPgDebounced=function(key,fn,ms){
     setTimeout(apply, 1500);
   })();
   const UPDATE_BASE_KEY = 'tmp.updateBaseUrl';
-  const UPDATE_BASES_DEFAULT = ['https://trackmypeps.netlify.app', 'https://trackmypeps.com'];
+  const UPDATE_BASES_DEFAULT = ['https://peptidegenius.netlify.app', 'https://peptidegenius.net'];
   const VERSION_CONTROL_KEY = 'tmp.versionControl.v1';
   function setStatus(text, color){
     const el = document.getElementById("tmp-update-status");
@@ -5960,10 +5960,12 @@ window.__tmpPgDebounced=function(key,fn,ms){
   }
   function wire(){
     var logo=document.querySelector('img.gpt-site-logo');
-    // Do not steal clicks from core.js triple-tap (Save backup / Import reveal).
-    // core.js already handles single-tap → scroll top and triple-tap → backup buttons.
     if(!logo||logo.dataset.homeTopWired==='1') return;
     logo.dataset.homeTopWired='1';
+    logo.addEventListener('click',function(e){
+      e.preventDefault();
+      goTop();
+    });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire);
   else wire();
@@ -6695,7 +6697,7 @@ function closeLogEdit(){
     };
   }
   function baseDataBlock(d){
-    return 'TRACKMYPEPS STACK OPTIMIZER DATA\n' +
+    return 'PEPTIDEGENIUS STACK OPTIMIZER DATA\n' +
       'Stack score: '+d.score+' / 100\n' +
       'Optimizer headline: '+d.headline+'\n' +
       'Summary: '+d.summary+'\n' +
@@ -6709,10 +6711,10 @@ function closeLogEdit(){
     var mode=val('opt-gpt-prompt-mode','evidence');
     var d=collectData();
     var data=baseDataBlock(d);
-    if(mode==='optimizer') return 'You are a rigorous stack-optimization reviewer. Review the TrackMyPeps optimizer output below. Prioritize: low inventory/run-out risk, timing conflicts, lane crowding, adherence burden, and practical simplification. Give specific next moves with rationale. Do not prescribe dosing. Separate facts from assumptions.\n\n'+data;
+    if(mode==='optimizer') return 'You are a rigorous stack-optimization reviewer. Review the PeptideGenius optimizer output below. Prioritize: low inventory/run-out risk, timing conflicts, lane crowding, adherence burden, and practical simplification. Give specific next moves with rationale. Do not prescribe dosing. Separate facts from assumptions.\n\n'+data;
     if(mode==='simplify') return 'You are reviewing this plan only for simplification and user experience. Find ways to reduce schedule burden, repeated lanes, redundant actions, and avoidable night/morning crowding. Give an ordered list of changes, each with expected impact and what should NOT be changed. Do not prescribe dosing.\n\n'+data;
     if(mode==='safety') return 'You are a cautious evidence-focused reviewer. Identify practical red flags in the schedule/inventory output below. Separate: (1) demonstrable facts from the provided data, (2) plausible assumptions, (3) insufficient evidence. Do not give medical instructions or dosing changes. Suggest clinician questions where appropriate.\n\n'+data;
-    return 'Use medical research scholar mode. Review the TrackMyPeps Stack Optimizer output below. Only make claims that are supported by demonstrable evidence, or clearly label them as assumptions/hypotheses. Do not invent citations. If you cannot verify a claim from the provided data or established evidence, say “insufficient evidence.” Separate your answer into: Evidence-supported observations, Assumptions/uncertainties, Practical schedule/inventory suggestions, Questions to ask a clinician. Do not prescribe dosing or claim medical certainty.\n\n'+data;
+    return 'Use medical research scholar mode. Review the PeptideGenius Stack Optimizer output below. Only make claims that are supported by demonstrable evidence, or clearly label them as assumptions/hypotheses. Do not invent citations. If you cannot verify a claim from the provided data or established evidence, say “insufficient evidence.” Separate your answer into: Evidence-supported observations, Assumptions/uncertainties, Practical schedule/inventory suggestions, Questions to ask a clinician. Do not prescribe dosing or claim medical certainty.\n\n'+data;
   }
   function refreshPrompt(){var ta=$('opt-gpt-summary'); if(ta) ta.value=buildPrompt();}
   window.tmpOptRefreshAdvisorPrompt=refreshPrompt;
@@ -6726,7 +6728,7 @@ function closeLogEdit(){
     await copyText(prompt);
     var endpoint=localStorage.getItem('tmp.gptAdvisorEndpoint')||'';
     if(endpoint){
-      try{var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,source:'TrackMyPeps Stack Optimizer'})}); if(res.ok){toast('Sent to GPT endpoint','The optimizer prompt was sent to your configured private endpoint.'); return;}}catch(e){}
+      try{var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,source:'PeptideGenius Stack Optimizer'})}); if(res.ok){toast('Sent to GPT endpoint','The optimizer prompt was sent to your configured private endpoint.'); return;}}catch(e){}
     }
     var url='https://chatgpt.com/?q='+encodeURIComponent(prompt);
     var win=null; try{win=window.open(url,'_blank')}catch(e){win=null}
@@ -6817,7 +6819,7 @@ function closeLogEdit(){
     var headline=(q('#opt-headline')&&q('#opt-headline').innerText||'Stack Optimizer review').trim();
     var summary=(q('#opt-summary')&&q('#opt-summary').innerText||'').trim();
     return modeIntro(mode)+'\n\n' +
-      'Review this TrackMyPeps Stack Optimizer output. Give a practical, evidence-constrained critique. Return sections: (1) Evidence-supported observations, (2) Assumptions/uncertainties, (3) Suggested next moves, (4) Inventory/run-out priorities, (5) Questions to ask a clinician.\n\n' +
+      'Review this PeptideGenius Stack Optimizer output. Give a practical, evidence-constrained critique. Return sections: (1) Evidence-supported observations, (2) Assumptions/uncertainties, (3) Suggested next moves, (4) Inventory/run-out priorities, (5) Questions to ask a clinician.\n\n' +
       'CURRENT OPTIMIZER STATE\n' +
       'Stack score: '+score+' / 100\n' +
       'Headline: '+headline+'\n' +
@@ -6843,7 +6845,7 @@ function closeLogEdit(){
     await copyText(prompt);
     var endpoint=localStorage.getItem('tmp.gptAdvisorEndpoint')||'';
     if(endpoint){
-      try{var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'TrackMyPeps Stack Optimizer',prompt:prompt})}); if(res.ok){toast('Sent to GPT advisor','The optimizer prompt was sent to your configured private endpoint.'); return;}}catch(e){}
+      try{var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'PeptideGenius Stack Optimizer',prompt:prompt})}); if(res.ok){toast('Sent to GPT advisor','The optimizer prompt was sent to your configured private endpoint.'); return;}}catch(e){}
     }
     var opened=false;
     try{opened=!!window.open('https://chatgpt.com/?q='+encodeURIComponent(prompt),'_blank','noopener');}catch(e){opened=false}
@@ -7321,7 +7323,7 @@ function closeLogEdit(){
     const vendor=($('gpt-vendor-ai-vendor')||{}).value||guessVendor(raw,($('gpt-vendor-ai-file')||{}).dataset.fileName||'');
     const wh=($('gpt-vendor-ai-warehouse')||{}).value||looksWarehouse(raw)||'Unknown';
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       '',
       'Task:',
       '1. Read the raw vendor price list below. It may be copied text from PDF, XLS/XLSX/CSV, email, or messy table.',
@@ -7434,7 +7436,7 @@ function closeLogEdit(){
     const headline = (document.querySelector('#opt-headline')||{}).textContent || 'Stack Optimizer review';
     const summary = (document.querySelector('#opt-summary')||{}).textContent || '';
     return [
-      'Use medical research scholar mode. Review this TrackMyPeps Stack Optimizer output.',
+      'Use medical research scholar mode. Review this PeptideGenius Stack Optimizer output.',
       'Only make claims supported by demonstrable evidence, or clearly label assumptions/hypotheses.',
       'Do not invent citations. If evidence is insufficient, say “insufficient evidence.”',
       'Do not prescribe dosing or claim medical certainty.',
@@ -7456,7 +7458,7 @@ function closeLogEdit(){
     if(ta && ta.value.trim()) return ta.value.trim();
     return [
       'Use medical research scholar mode.',
-      'Build a daily and weekly stack proposal from the selected TrackMyPeps Stack Builder inputs.',
+      'Build a daily and weekly stack proposal from the selected PeptideGenius Stack Builder inputs.',
       'Separate evidence-supported observations from assumptions.',
       'Include AM / lunch / dinner / bedtime lanes, inventory-vs-wishlist decisions, and clinician questions.',
       'Do not prescribe dosing or claim medical certainty.'
@@ -7469,7 +7471,7 @@ function closeLogEdit(){
     const vendor = val('gpt-vendor-ai-vendor') || 'Unknown vendor';
     const wh = val('gpt-vendor-ai-warehouse') || 'Unknown';
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       'Vendor: ' + vendor,
       'Warehouse: ' + wh,
@@ -7601,7 +7603,7 @@ function closeLogEdit(){
       ? ('IMPORTANT: I will attach/upload the source file to this ChatGPT message separately. File name: '+name+'. Use the attached file as the source of truth.')
       : (raw ? 'The raw extracted text is included below.' : 'No raw text was extracted. Ask me to paste the price list or attach the file if needed.');
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       '',
       'Vendor: '+vendor(),
@@ -7712,7 +7714,7 @@ function closeLogEdit(){
     const warehouse=(val('gpt-vendor-ai-warehouse')||'Unknown').trim();
     const attach=isAttachFile();
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       '',
       'Vendor: '+vendor,
@@ -7911,7 +7913,7 @@ function closeLogEdit(){
     const attach=isBinary();
     const force=($('gpt-vendor-ai-force-vendor')||{}).checked!==false;
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       '',
       'CRITICAL VENDOR RULE:',
@@ -8075,7 +8077,7 @@ function closeLogEdit(){
     const attach=isAttachOnly();
     const rawText=raw();
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       '',
       'CRITICAL VENDOR RULE:',
@@ -9076,7 +9078,7 @@ function closeLogEdit(){
     const name=f?f.name:'[attach stack file]';
     const pasted=($('gpt-import-stack-text')||{}).value||'';
     return [
-      'You are converting my stack file/table into a TrackMyPeps Stack Import table.',
+      'You are converting my stack file/table into a PeptideGenius Stack Import table.',
       '',
       'Return ONLY a markdown table with these columns:',
       '| Item | Frequency | Purpose |',
@@ -9098,7 +9100,7 @@ function closeLogEdit(){
   function ensureGPTModal(){
     let m=$('gpt-import-stack-gpt-modal'); if(m)return m;
     m=document.createElement('div'); m.id='gpt-import-stack-gpt-modal';
-    m.innerHTML='<div id="gpt-import-stack-gpt-card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px"><div><b style="font-size:17px;color:#18385E">GPT stack import prompt ready</b><p style="margin:4px 0 0;font-size:12px;color:#5C738F;line-height:1.45">For PDF/XLS/JPEG, open GPT and attach the same file. Then paste/send this prompt. GPT should return the Item / Frequency / Purpose table for TrackMyPeps.</p></div><button type="button" id="gpt-import-stack-gpt-close">Close</button></div><textarea id="gpt-import-stack-gpt-text"></textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="primary" id="gpt-import-stack-gpt-copy-open">Copy prompt + open GPT</button><button type="button" id="gpt-import-stack-gpt-copy">Copy prompt</button><button type="button" id="gpt-import-stack-gpt-select">Select text</button></div></div>';
+    m.innerHTML='<div id="gpt-import-stack-gpt-card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px"><div><b style="font-size:17px;color:#18385E">GPT stack import prompt ready</b><p style="margin:4px 0 0;font-size:12px;color:#5C738F;line-height:1.45">For PDF/XLS/JPEG, open GPT and attach the same file. Then paste/send this prompt. GPT should return the Item / Frequency / Purpose table for PeptideGenius.</p></div><button type="button" id="gpt-import-stack-gpt-close">Close</button></div><textarea id="gpt-import-stack-gpt-text"></textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="primary" id="gpt-import-stack-gpt-copy-open">Copy prompt + open GPT</button><button type="button" id="gpt-import-stack-gpt-copy">Copy prompt</button><button type="button" id="gpt-import-stack-gpt-select">Select text</button></div></div>';
     document.body.appendChild(m);
     $('gpt-import-stack-gpt-close').onclick=()=>m.style.display='none';
     m.addEventListener('click',e=>{if(e.target===m)m.style.display='none'});
@@ -11415,7 +11417,7 @@ function closeLogEdit(){
     return [
       'Use medical research scholar mode for caution, but return ONLY valid JSON. No markdown. No commentary.',
       '',
-      'Build a TrackMyPeps stack plan from my goals/inventory/context.',
+      'Build a PeptideGenius stack plan from my goals/inventory/context.',
       'The final answer must be a JSON array using this exact schema:',
       '[',
       '  {',
@@ -11433,7 +11435,7 @@ function closeLogEdit(){
       'Each item must include name, lane, days, dose, unit, and purpose.',
       'Do not prescribe medical dosing certainty. Use typical/provisional planning values only, and keep purpose wording cautious.',
       '',
-      'TrackMyPeps import rules:',
+      'PeptideGenius import rules:',
       '- breakfast/lunch populate those calendar sections',
       '- dinner/bedtime populate those calendar sections',
       '- The JSON will be imported into S.stackPlan[] as the single source of truth.',
@@ -11445,7 +11447,7 @@ function closeLogEdit(){
     let m=$('gpt336-json-import-modal');
     if(m)return m;
     m=document.createElement('div');m.id='gpt336-json-import-modal';
-    m.innerHTML='<div id="gpt336-json-import-card"><div class="head"><div><b>Strict JSON Stack Plan Import</b><p>Paste GPT’s JSON array here. TrackMyPeps will validate it, save it as S.stackPlan[], sync Inventory, and populate the Weekly Calendar directly.</p></div><button type="button" id="gpt336-close-json">Close</button></div><textarea id="gpt336-json-input" placeholder=\'[{"name":"Retatrutide","lane":"breakfast","days":["Mon","Thu"],"dose":1,"unit":"mg","purpose":"Fat loss / appetite"}]\'></textarea><div class="actions"><button type="button" class="primary" id="gpt336-import-json">Import JSON to Weekly Calendar</button><button type="button" id="gpt336-copy-prompt-2">Copy strict GPT prompt</button><button type="button" id="gpt336-open-gpt">Open GPT</button></div><div id="gpt336-json-status">Ready.</div></div>';
+    m.innerHTML='<div id="gpt336-json-import-card"><div class="head"><div><b>Strict JSON Stack Plan Import</b><p>Paste GPT’s JSON array here. PeptideGenius will validate it, save it as S.stackPlan[], sync Inventory, and populate the Weekly Calendar directly.</p></div><button type="button" id="gpt336-close-json">Close</button></div><textarea id="gpt336-json-input" placeholder=\'[{"name":"Retatrutide","lane":"breakfast","days":["Mon","Thu"],"dose":1,"unit":"mg","purpose":"Fat loss / appetite"}]\'></textarea><div class="actions"><button type="button" class="primary" id="gpt336-import-json">Import JSON to Weekly Calendar</button><button type="button" id="gpt336-copy-prompt-2">Copy strict GPT prompt</button><button type="button" id="gpt336-open-gpt">Open GPT</button></div><div id="gpt336-json-status">Ready.</div></div>';
     document.body.appendChild(m);
     $('gpt336-close-json').onclick=()=>m.style.display='none';
     m.addEventListener('click',e=>{if(e.target===m)m.style.display='none'});
@@ -11535,7 +11537,7 @@ function closeLogEdit(){
     if(!faq || document.getElementById('gpt336-faq-workflow')) return;
     const block=document.createElement('section');
     block.id='gpt336-faq-workflow';
-    block.innerHTML='<h2>Reliable GPT Stack Builder workflow</h2><p>For precision, do not import loose tables as the final source. Use GPT to return strict JSON, then import that JSON into TrackMyPeps as <b>S.stackPlan[]</b>.</p><ol><li>Open <b>Stack Builder</b> and choose your goal lanes.</li><li>Click <b>Copy strict GPT prompt</b>.</li><li>Paste the prompt into GPT and ask for JSON only.</li><li>Copy GPT’s JSON array.</li><li>Return to TrackMyPeps → <b>Open JSON import</b>.</li><li>Paste JSON and click <b>Import JSON to Weekly Calendar</b>.</li><li>The Weekly Calendar, Inventory, and Optimizer now read the same local stack plan.</li></ol>';
+    block.innerHTML='<h2>Reliable GPT Stack Builder workflow</h2><p>For precision, do not import loose tables as the final source. Use GPT to return strict JSON, then import that JSON into PeptideGenius as <b>S.stackPlan[]</b>.</p><ol><li>Open <b>Stack Builder</b> and choose your goal lanes.</li><li>Click <b>Copy strict GPT prompt</b>.</li><li>Paste the prompt into GPT and ask for JSON only.</li><li>Copy GPT’s JSON array.</li><li>Return to PeptideGenius → <b>Open JSON import</b>.</li><li>Paste JSON and click <b>Import JSON to Weekly Calendar</b>.</li><li>The Weekly Calendar, Inventory, and Optimizer now read the same local stack plan.</li></ol>';
     faq.insertBefore(block, faq.firstChild);
   }
   document.addEventListener('click',async e=>{
@@ -11581,7 +11583,7 @@ function closeLogEdit(){
         '<div class="gpt337-detail-actions"><button type="button" class="primary" id="gpt337-copy-prompt">Copy strict GPT prompt</button><button type="button" id="gpt337-open-gpt">Open GPT</button></div>'+
       '</div>'+
       '<div class="gpt337-detail-card s4">'+
-        '<div class="top"><span class="num">4</span><strong>Paste JSON into TrackMyPeps</strong></div>'+
+        '<div class="top"><span class="num">4</span><strong>Paste JSON into PeptideGenius</strong></div>'+
         '<p>Come back here and paste GPT’s JSON into the import box. Then click <b>Import JSON to Weekly Calendar</b>. This is the step that actually fills the calendar.</p>'+
         '<div class="gpt337-detail-actions"><button type="button" class="primary" id="gpt337-show-inline-import">Paste JSON here</button><button type="button" id="gpt337-open-json-modal">Open full JSON import</button></div>'+
       '</div>';
@@ -11713,7 +11715,7 @@ function closeLogEdit(){
     return [
       'Return ONLY valid JSON. No markdown. No commentary.',
       '',
-      'Create a TrackMyPeps stack plan using this exact schema:',
+      'Create a PeptideGenius stack plan using this exact schema:',
       '[',
       '  {',
       '    "name": "Retatrutide",',
@@ -11844,7 +11846,7 @@ function closeLogEdit(){
     return [
       'Return ONLY valid JSON. No markdown. No commentary.',
       '',
-      'Create a TrackMyPeps stack plan using this exact schema:',
+      'Create a PeptideGenius stack plan using this exact schema:',
       '[{"name":"Retatrutide","lane":"breakfast","days":["Mon","Thu"],"dose":1,"unit":"mg","purpose":"Fat loss / appetite lane"}]',
       '',
       'Rules:',
@@ -12540,7 +12542,7 @@ function closeLogEdit(){
     return [
       'Return ONLY valid JSON. No markdown. No commentary.',
       '',
-      'Create a TrackMyPeps stack plan using this exact schema:',
+      'Create a PeptideGenius stack plan using this exact schema:',
       '[{"name":"Retatrutide","lane":"breakfast","days":["Mon","Thu"],"dose":1,"unit":"mg","purpose":"Fat loss / appetite lane"}]',
       '',
       intent ? ('User request (primary guidance):\n'+intent) : 'User request: (none — infer from selected lanes and inventory only)',
@@ -12986,7 +12988,7 @@ function closeLogEdit(){
     const st=selectedBuilderState();
     const intent=String(st.intent||($('gpt343-intent')||{}).value||'').trim();
     return [
-      existing || 'Create a TrackMyPeps stack plan as strict JSON.',
+      existing || 'Create a PeptideGenius stack plan as strict JSON.',
       '',
       intent ? ('USER REQUEST (follow this closely):\n'+intent) : '',
       intent ? '' : null,
@@ -13112,7 +13114,7 @@ function closeLogEdit(){
     const hero=root.querySelector('.gpt343-hero') || root.firstElementChild;
     const card=document.createElement('section');
     card.id='gpt346-api-card';
-    card.innerHTML='<div class="gpt346-head"><div><div class="gpt346-k">API GPT automation</div><div class="gpt346-title">Generate a stack plan without copy/paste</div><div class="gpt346-sub">Uses your Netlify Function and server-side OpenAI key. GPT returns strict JSON, then TrackMyPeps can import it directly into S.stackPlan and the Weekly Calendar.</div></div><div class="gpt346-actions"><button type="button" class="primary" id="gpt346-generate-import">Generate + import</button><button type="button" id="gpt346-generate">Generate only</button></div></div><div id="gpt346-api-status">Ready. This works after deploying the Netlify function package.</div>';
+    card.innerHTML='<div class="gpt346-head"><div><div class="gpt346-k">API GPT automation</div><div class="gpt346-title">Generate a stack plan without copy/paste</div><div class="gpt346-sub">Uses your Netlify Function and server-side OpenAI key. GPT returns strict JSON, then PeptideGenius can import it directly into S.stackPlan and the Weekly Calendar.</div></div><div class="gpt346-actions"><button type="button" class="primary" id="gpt346-generate-import">Generate + import</button><button type="button" id="gpt346-generate">Generate only</button></div></div><div id="gpt346-api-status">Ready. This works after deploying the Netlify function package.</div>';
     if(hero && hero.parentNode) hero.parentNode.insertBefore(card, hero.nextSibling);
     else root.insertBefore(card, root.firstChild);
     $('gpt346-generate').onclick=()=>callGPT(false);
@@ -13202,7 +13204,7 @@ function closeLogEdit(){
   // Override strict prompt function if present.
   const oldStrict=window.tmpStrictStackPlanPrompt;
   window.tmpStrictStackPlanPrompt=function(){
-    const base=typeof oldStrict==='function'?oldStrict():'Return ONLY valid JSON using TrackMyPeps stack plan schema.';
+    const base=typeof oldStrict==='function'?oldStrict():'Return ONLY valid JSON using PeptideGenius stack plan schema.';
     return strongerPrompt(base);
   };
 
@@ -13550,7 +13552,7 @@ function closeLogEdit(){
       '- But DO consider every inventory item before deciding the plan.',
       '- Do not return only a tiny core stack if selected lanes can be reasonably filled by inventory.',
       '- For each selected goal lane, include at least one best-fit inventory item when a plausible inventory match exists.',
-      '- If a selected lane has plausible inventory but you choose not to include it, that is usually wrong for TrackMyPeps; include it as optional/review-needed instead.',
+      '- If a selected lane has plausible inventory but you choose not to include it, that is usually wrong for PeptideGenius; include it as optional/review-needed instead.',
       '- Use exact inventory codes/names, not generic names.',
       '- Prefer WV instead of separate BPC-157/TB-500 when WV exists.',
       '- Prefer CP20 instead of separate CJC-1295/Ipamorelin when CP20 is intended as the blend; individual Ipamorelin may remain separate only if intentionally needed.',
@@ -13799,7 +13801,7 @@ function closeLogEdit(){
     const p=$('gpt343-prompt') || $('sb-feed');
     if(p && p.value) return p.value;
     if(typeof window.tmpStrictStackPlanPrompt==='function') return window.tmpStrictStackPlanPrompt();
-    return 'Return ONLY valid JSON. Create a TrackMyPeps stack plan using inventory names.';
+    return 'Return ONLY valid JSON. Create a PeptideGenius stack plan using inventory names.';
   }
 
   function goPage(pg){
@@ -13823,7 +13825,7 @@ function closeLogEdit(){
     const apiTitle=document.querySelector('#gpt346-api-card .gpt346-title');
     if(apiTitle) apiTitle.textContent='Generate stack with GPT';
     const apiSub=document.querySelector('#gpt346-api-card .gpt346-sub');
-    if(apiSub) apiSub.textContent='Main path: GPT considers selected lanes and inventory, returns a structured plan, and TrackMyPeps fills the Weekly Calendar.';
+    if(apiSub) apiSub.textContent='Main path: GPT considers selected lanes and inventory, returns a structured plan, and PeptideGenius fills the Weekly Calendar.';
     const a=$('gpt346-generate-import');
     if(a) a.textContent='Generate stack + fill calendar';
     const b=$('gpt346-generate');
@@ -13931,7 +13933,7 @@ function closeLogEdit(){
     var apiTitle=document.querySelector('#gpt346-api-card .gpt346-title');
     if(apiTitle) apiTitle.textContent='Generate with GPT';
     var apiSub=document.querySelector('#gpt346-api-card .gpt346-sub');
-    if(apiSub) apiSub.textContent='Main path: GPT considers your selected lanes and inventory, returns a structured plan, and TrackMyPeps fills the Weekly Calendar.';
+    if(apiSub) apiSub.textContent='Main path: GPT considers your selected lanes and inventory, returns a structured plan, and PeptideGenius fills the Weekly Calendar.';
 
     var genImport=$('gpt346-generate-import');
     if(genImport) genImport.textContent='Generate stack + fill calendar';
@@ -14814,7 +14816,7 @@ function closeLogEdit(){
     const apiTitle=document.querySelector('#gpt346-api-card .gpt346-title');
     if(apiTitle) apiTitle.textContent='2. Generate with GPT';
     const apiSub=document.querySelector('#gpt346-api-card .gpt346-sub');
-    if(apiSub) apiSub.textContent='Main path: GPT considers your selected lanes and stocked inventory, then TrackMyPeps fills the Weekly Calendar.';
+    if(apiSub) apiSub.textContent='Main path: GPT considers your selected lanes and stocked inventory, then PeptideGenius fills the Weekly Calendar.';
     const gen=$('gpt346-generate-import');
     if(gen) gen.textContent='Generate stack + fill calendar';
     const prev=$('gpt346-generate');
@@ -14889,7 +14891,7 @@ function closeLogEdit(){
     if(apiTitle) apiTitle.textContent='2. Build with A.I.';
 
     var apiSub=document.querySelector('#gpt346-api-card .gpt346-sub');
-    if(apiSub) apiSub.textContent='A.I. considers your selected lanes and stocked inventory, then TrackMyPeps fills the Weekly Calendar.';
+    if(apiSub) apiSub.textContent='A.I. considers your selected lanes and stocked inventory, then PeptideGenius fills the Weekly Calendar.';
 
     var gen=$('gpt346-generate-import');
     if(gen) gen.textContent='Build stack + fill calendar';
@@ -14975,7 +14977,7 @@ function closeLogEdit(){
     if(sub) sub.textContent='Choose your lanes, let A.I. consider your stocked inventory, then review the weekly plan before it goes on your calendar.';
 
     const apiSub=document.querySelector('#gpt346-api-card .gpt346-sub');
-    if(apiSub) apiSub.textContent='A.I. considers your selected lanes and stocked inventory, then TrackMyPeps fills the Weekly Calendar.';
+    if(apiSub) apiSub.textContent='A.I. considers your selected lanes and stocked inventory, then PeptideGenius fills the Weekly Calendar.';
 
     document.querySelectorAll('#pg-stackbuilder *').forEach(function(el){
       if(!el.childElementCount && el.textContent){
@@ -15430,7 +15432,7 @@ function closeLogEdit(){
     const txt=gv('pi-text')||'';
 
     return [
-      'You are normalizing a vendor peptide price list for TrackMyPeps.',
+      'You are normalizing a vendor peptide price list for PeptideGenius.',
       'Return ONLY CSV. No markdown, no commentary.',
       '',
       'CRITICAL VENDOR RULE:',
@@ -15471,7 +15473,7 @@ function closeLogEdit(){
 
     const box=document.createElement('div');
     box.id='gpt368-vendor-ai-box';
-    box.innerHTML='<div class="head"><div><div class="title">A.I. normalization helper</div><div class="sub">Builds the exact TrackMyPeps CSV prompt using the selected vendor and warehouse. Copy it into GPT, then paste the normalized CSV back for import.</div></div><div class="actions"><button type="button" class="primary" id="gpt368-build-vendor-prompt">Build prompt</button><button type="button" id="gpt368-copy-vendor-prompt">Copy prompt</button><button type="button" id="gpt368-open-chatgpt">Open GPT</button></div></div><textarea id="gpt368-vendor-ai-prompt" spellcheck="false"></textarea><div id="gpt368-vendor-ai-status"></div>';
+    box.innerHTML='<div class="head"><div><div class="title">A.I. normalization helper</div><div class="sub">Builds the exact PeptideGenius CSV prompt using the selected vendor and warehouse. Copy it into GPT, then paste the normalized CSV back for import.</div></div><div class="actions"><button type="button" class="primary" id="gpt368-build-vendor-prompt">Build prompt</button><button type="button" id="gpt368-copy-vendor-prompt">Copy prompt</button><button type="button" id="gpt368-open-chatgpt">Open GPT</button></div></div><textarea id="gpt368-vendor-ai-prompt" spellcheck="false"></textarea><div id="gpt368-vendor-ai-status"></div>';
 
     const textWrap=g('pi-text') ? g('pi-text').closest('div') : null;
     if(textWrap && textWrap.parentNode) textWrap.parentNode.insertBefore(box, textWrap);
@@ -15809,7 +15811,7 @@ function closeLogEdit(){
     if(typeof window.tmpBuildVendorAIPrompt368 === 'function') return window.tmpBuildVendorAIPrompt368();
     const vendor=(g('pi-vendor')&&g('pi-vendor').value)||'UnknownVendor';
     const text=(g('pi-text')&&g('pi-text').value)||'';
-    return 'Normalize this TrackMyPeps vendor price list as CSV only.\nVendor: '+vendor+'\n\n'+text;
+    return 'Normalize this PeptideGenius vendor price list as CSV only.\nVendor: '+vendor+'\n\n'+text;
   }
 
   function ensureManualDrawer(){

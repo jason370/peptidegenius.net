@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
   ╔════════════════════════════════════════════════════════════════════════╗
   ║                                                                        ║
@@ -10,12 +10,12 @@
   ║   of derivative works — in whole or in part — is strictly prohibited  ║
   ║   without prior written permission from the copyright holder.         ║
   ║                                                                        ║
-  ║   Official site:       https://PeptideGenius.net                         ║
+  ║   Official site:       https://peptidegenius.net                         ║
   ║   Report piracy:       PeptideGenius@gmail.com                           ║
-  ║   Origin fingerprint:  PG-2026Q2-pg10000a                             ║
+  ║   Origin fingerprint:  TMP-2026Q2-a7f3d9e2                             ║
   ║                                                                        ║
   ║   If you are viewing this source from a host other than                ║
-  ║   PeptideGenius.net, you are likely viewing an unauthorized copy.        ║
+  ║   peptidegenius.net, you are likely viewing an unauthorized copy.        ║
   ║                                                                        ║
   ╚════════════════════════════════════════════════════════════════════════╝
 -->
@@ -76,7 +76,7 @@
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PeptideGenius — Smart Peptide Tracker</title>
+<title>PeptideGenius — All-In-One Peptide Tool</title>
 <!-- ─── PWA install metadata (added for app-like home screen install) ─── -->
 <meta name="theme-color" content="#14B8A6">
 <meta name="application-name" content="PeptideGenius">
@@ -104,7 +104,7 @@
    in the footer and the comment at the top of this file are the load-
    bearing anti-piracy measures; hostname sniffing in client-side JS
    cannot prevent redistribution by anyone who edits this file.
-   Origin fingerprint: PG-2026Q2-pg10000a
+   Origin fingerprint: TMP-2026Q2-a7f3d9e2
    ───────────────────────────────────────────────────────────────────── */
 (function(){
   var ALLOWED_HOSTS=[
@@ -152,7 +152,7 @@
 (function(){try{var t=localStorage.getItem('peptideTrackerTheme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <link rel="stylesheet" href="assets/app/core.css?v=20260714-nasal-box">
-<link rel="stylesheet" href="assets/app/patches.css?v=20260728-logo-bigger">
+<link rel="stylesheet" href="assets/app/patches.css?v=20260724-backup-remind">
 
 <meta name="pt-version" content="33.393">
 <meta name="pt-channel" content="stable">
@@ -163,16 +163,13 @@
 </head>
 <body>
 
-<!-- origin-fingerprint: PG-2026Q2-pg10000a | © 2026 PeptideGenius.net -->
-<div data-tmp-origin="peptidegenius-com-v1-a7f3d9e2bcc4" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">© 2026 PeptideGenius.net — All Rights Reserved — PG-2026Q2-pg10000a</div>
+<!-- origin-fingerprint: TMP-2026Q2-a7f3d9e2 | © 2026 PeptideGenius.net -->
+<div data-tmp-origin="peptidegenius-com-v1-a7f3d9e2bcc4" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none">© 2026 PeptideGenius.net — All Rights Reserved — TMP-2026Q2-a7f3d9e2</div>
 <div class="app" data-gpt-version="33.393">
-  <div id="trial-banner" style="display:none;padding:6px 16px;background:linear-gradient(90deg,#F0FDFB 0%,#ECFDF5 100%);border-bottom:1px solid #D1FAE5;font-size:11px;color:#059669;font-weight:500;text-align:center;letter-spacing:0.5px">
-    🎁 Free trial active • <span id="trial-days">30</span> days remaining
-  </div>
   <div class="app-header">
     <div class="app-brand">
       <div class="app-mark">
-        <img class="gpt-site-logo" src="assets/branding/site-logo.png" alt="PeptideGenius — Smart Peptide Tracker">
+        <img class="gpt-site-logo" src="assets/branding/site-logo.png" alt="PeptideGenius — All-In-One Peptide Tool">
         <div class="app-syringe" id="app-logo" title="PeptideGenius" role="img" aria-label="PeptideGenius">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 132" aria-hidden="true">
             <defs>
@@ -269,8 +266,8 @@
           </svg>
         </div>
         <div class="app-wordmark">
-          <h1 class="app-title"><span class="app-title-pre">TrackMy</span><span class="app-title-p">P</span><span class="app-title-eps">eps</span></h1>
-          <div class="app-tagline">Smart Peptide Tracker</div>
+          <h1 class="app-title"><span class="app-title-pre">Peptide</span><span class="app-title-p">G</span><span class="app-title-eps">enius</span></h1>
+          <div class="app-tagline">All-In-One Peptide Tool</div>
         </div>
         <div id="logo-reveal-actions" style="display:none;flex-direction:column;align-items:flex-start;gap:4px;width:100%;max-width:11rem">
           <button type="button" id="logo-backup-btn" class="btn bb" style="padding:4px 11px;font-size:11px;font-weight:600;border-radius:8px;white-space:nowrap;width:100%" title="Save a file copy of your tracker">Save backup</button>
@@ -285,85 +282,15 @@
         <button data-pg="contact" data-accent="lime" class="hdr-tab-btn">Contact</button>
       </div>
       <div class="app-meta">
-        <button id="hdr-backup-btn" type="button" title="Download a JSON backup of your tracker" style="background:rgba(15,23,42,.06);border:1px solid rgba(148,163,184,.35);font-size:11px;color:var(--color-text-primary);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;font-weight:700">💾 Backup</button>
-        <button id="hdr-import-btn" type="button" title="Import a TrackMyPeps / PeptideGenius JSON backup" style="background:rgba(15,23,42,.06);border:1px solid rgba(148,163,184,.35);font-size:11px;color:var(--color-text-primary);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;font-weight:700">⬆ Import</button>
-        <button id="pg-open-upgrade" type="button" title="Upgrade to PeptideGenius Pro" style="background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);border:none;font-size:11px;color:#fff;cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;font-weight:700;letter-spacing:.02em">✨ Pro</button>
         <button id="btn-theme-hdr" type="button" title="Toggle light / dark mode" aria-label="Toggle theme">
           <span class="tt-icon">🌙</span><span class="tt-hint">dark</span>
         </button>
         <button id="privacy-btn" style="background:none;border:none;font-size:12px;color:#1D9E75;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit;font-weight:500" title="Privacy & how this app works">🔒 Privacy</button>
-        <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" class="hdr-support-link" title="Support PeptideGenius on Buy Me a Coffee — opens in a new tab">
+        <a href="https://buymeacoffee.com/trackmypeps" target="_blank" rel="noopener noreferrer" class="hdr-support-link" title="Support PeptideGenius on Buy Me a Coffee — opens in a new tab">
           <span class="hdr-support-icon">☕</span>
           <span class="hdr-support-text">Buy me a coffee</span>
         </a>
       </div>
-    </div>
-  </div>
-
-  <!-- PeptideGenius Pro Upgrade Modal -->
-  <div id="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title" aria-hidden="true" tabindex="-1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;align-items:center;justify-content:center;padding:20px 16px;overflow-y:auto">
-    <div style="background:linear-gradient(135deg,#FFFBF0 0%,#FFF5E6 100%);border-radius:16px;max-width:760px;width:100%;padding:2.5rem;box-shadow:0 20px 60px rgba(79,70,229,.15);position:relative">
-      <div style="text-align:center;margin-bottom:2rem">
-        <div style="font-size:48px;margin-bottom:12px">✨</div>
-        <h2 id="upgrade-modal-title" style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 8px;letter-spacing:-.02em">Unlock Pro Features</h2>
-        <p style="font-size:15px;color:#78716C;margin:0">Unlimited tracking, full history, and peace of mind.</p>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:2.5rem">
-        <div class="pricing-card" style="padding:20px;border:2px solid #F3E8FF;border-radius:12px;background:white;cursor:pointer;transition:all .2s ease;text-align:center" data-plan="monthly">
-          <div style="font-size:12px;font-weight:700;color:#A78BFA;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Monthly</div>
-          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$5</div>
-          <div style="font-size:13px;color:#78716C;margin-bottom:16px;height:20px;font-weight:500">/month</div>
-          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:#A78BFA;color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="monthly">Choose Plan</button>
-        </div>
-        <div class="pricing-card" style="padding:20px;border:2px solid #FCD34D;border-radius:12px;background:linear-gradient(135deg,#FFFBF0 0%,#FEF3C7 100%);cursor:pointer;transition:all .2s ease;position:relative;transform:scale(1.05)" data-plan="yearly">
-          <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;box-shadow:0 4px 12px rgba(245,158,11,.3)">⚡ BEST VALUE</div>
-          <div style="font-size:12px;font-weight:700;color:#D97706;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Yearly</div>
-          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$49</div>
-          <div style="font-size:13px;color:#92400E;margin-bottom:16px;height:20px;font-weight:600">Save 18% vs monthly</div>
-          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="yearly">Choose Plan</button>
-        </div>
-        <div class="pricing-card" style="padding:20px;border:2px solid #DBEAFE;border-radius:12px;background:linear-gradient(135deg,#F0F9FF 0%,#E0F2FE 100%);cursor:pointer;transition:all .2s ease" data-plan="lifetime">
-          <div style="font-size:12px;font-weight:700;color:#0284C7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Lifetime</div>
-          <div style="font-size:32px;font-weight:800;color:#1F2937;margin-bottom:4px">$79</div>
-          <div style="font-size:13px;color:#0369A1;margin-bottom:16px;height:20px;font-weight:500">Own it forever</div>
-          <button class="btn" style="width:100%;padding:10px 14px;font-size:13px;font-weight:700;background:#0284C7;color:white;border:none;border-radius:8px;cursor:pointer;transition:all .2s ease" data-plan-btn="lifetime">Choose Plan</button>
-        </div>
-      </div>
-      <div style="background:white;border:2px dashed #F3E8FF;border-radius:12px;padding:18px;margin-bottom:20px">
-        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:10px">🔑 Have a license key?</div>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="license-key-input" placeholder="Paste your key here..." style="flex:1;padding:11px 13px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;font-family:monospace;background:#FAFAFA;color:#111827;transition:all .2s ease" />
-          <button id="restore-license-btn" class="btn" style="padding:11px 18px;font-size:13px;font-weight:700;background:#A78BFA;color:white;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s ease">Restore</button>
-        </div>
-        <div style="font-size:11px;color:#78716C;margin-top:9px">You'll get your key via email after purchase.</div>
-      </div>
-      <div style="background:white;border:1px solid #F3E8FF;border-radius:12px;padding:18px;margin-bottom:20px">
-        <div style="font-size:12px;font-weight:800;color:#1F2937;margin-bottom:14px;text-transform:uppercase;letter-spacing:.08em">What You Get with Pro</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;color:#374151">
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Unlimited peptides</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Unlimited vials</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Full shot history</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Supply forecasting</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Data export</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="color:#EC4899;font-size:16px">💜</span> Cloud sync (soon)</div>
-        </div>
-      </div>
-      <div style="background:linear-gradient(135deg,#FEF3C7 0%,#FCD34D 100%);border:2px solid #FCD34D;border-radius:12px;padding:18px;margin-bottom:20px">
-        <div style="font-size:12px;font-weight:800;color:#92400E;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em">🎁 Earn Promo Codes</div>
-        <div style="font-size:13px;color:#78350F;line-height:1.6">
-          <p style="margin:0 0 10px">Help us improve! Share your love for PeptideGenius and earn discounts:</p>
-          <ul style="margin:0;padding-left:20px;font-size:12.5px">
-            <li style="margin-bottom:8px"><strong>★★★★★ Review:</strong> Share a screenshot of your review — get <strong>10-30% off</strong></li>
-            <li style="margin-bottom:8px"><strong>Bug Report:</strong> Email <strong>PeptideGenius@gmail.com</strong> — get <strong>15% off</strong></li>
-            <li><strong>Feature Ideas:</strong> Email your suggestion — get <strong>5-20% off</strong></li>
-          </ul>
-        </div>
-      </div>
-      <button id="upgrade-purchase-btn" style="width:100%;padding:14px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#F59E0B 0%,#EC4899 100%);color:white;border:none;border-radius:10px;cursor:pointer;transition:all .2s ease;box-shadow:0 4px 15px rgba(245,158,11,.2)">Continue to Payment</button>
-      <div style="text-align:center;margin-top:14px;font-size:11px;color:#78716C">
-        Secure payment powered by <strong>Stripe</strong> • 30-day money-back guarantee
-      </div>
-      <button id="upgrade-close" style="position:absolute;top:16px;right:16px;background:white;border:1px solid #E5E7EB;border-radius:8px;padding:6px 10px;cursor:pointer;color:#6B7280;font-size:18px;font-weight:600;transition:all .2s ease" aria-label="Close upgrade dialog">✕</button>
     </div>
   </div>
 
@@ -420,7 +347,7 @@
       <div style="font-size:22px;line-height:1;flex-shrink:0">⚠️</div>
       <div style="flex:1;min-width:240px">
         <div style="font-size:13.5px;font-weight:700;color:var(--info-amber-fg);margin-bottom:3px">Your data may disappear the next time you open a new version of this file</div>
-        <div style="font-size:12px;color:var(--info-amber-fg2);line-height:1.55">You're running this from a downloaded file. Browsers tie saved data to the exact file path — if you open a newer download (like <code>peptide_tracker (2).html</code>), your shots, inventory and packages will look empty. <b>Click "💾 Backup now" to save a JSON file you can re-import into any future copy.</b> Or even better: deploy to PeptideGenius.net once and always use that URL instead.</div>
+        <div style="font-size:12px;color:var(--info-amber-fg2);line-height:1.55">You're running this from a downloaded file. Browsers tie saved data to the exact file path — if you open a newer download (like <code>peptide_tracker (2).html</code>), your shots, inventory and packages will look empty. <b>Click "💾 Backup now" to save a JSON file you can re-import into any future copy.</b> Or even better: deploy to peptidegenius.net once and always use that URL instead.</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <button class="btn" id="sb-backup" style="padding:5px 12px;font-size:12px;font-weight:600;background:var(--info-amber-border);color:var(--color-background-primary);border-color:var(--info-amber-fg);white-space:nowrap">💾 Backup now</button>
@@ -1722,7 +1649,7 @@
         <div style="font-size:18px;font-weight:700;color:var(--accent-blue-fg);letter-spacing:-.02em">PeptideGenius</div>
       </div>
     </div>
-    <p style="font-size:13.5px;line-height:1.65;color:var(--accent-indigo-fg);margin:0">PeptideGenius is a smart tracking app for people optimizing with peptides and wellness protocols. Log your shots, manage your stacks, watch your inventory, and dial in your dosing. Free tier covers the basics. Pro unlocks unlimited peptides, advanced features, and premium support.</p>
+    <p style="font-size:13.5px;line-height:1.65;color:var(--accent-indigo-fg);margin:0">PeptideGenius is a private, free, all-in-one tool for people running peptide protocols. It helps you plan stacks, log shots, track doses, compare vendor prices, and watch packages — all in a single file that runs entirely in your browser.</p>
   </div>
   <div class="card" style="border-top:3px solid #0891B2">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:.875rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#0891B2,#06B6D4)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--color-text-primary);letter-spacing:-.01em">What makes it different</div></div>
@@ -1734,8 +1661,8 @@
       </div>
       <div style="padding:14px 16px;background:linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%);border-radius:12px;border:.5px solid #BBF7D0">
         <div class="icon-tile" style="background:linear-gradient(135deg,#047857,#10B981);margin-bottom:10px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg></div>
-        <div style="font-size:13px;font-weight:700;color:var(--accent-green-fg);margin-bottom:4px;letter-spacing:-.01em">Free + Pro Tiers</div>
-        <div style="font-size:11.5px;color:var(--accent-green-fg);line-height:1.55">Start free with 3 peptides. Upgrade to Pro for unlimited tracking, advanced features, and premium support.</div>
+        <div style="font-size:13px;font-weight:700;color:var(--accent-green-fg);margin-bottom:4px;letter-spacing:-.01em">Always Free</div>
+        <div style="font-size:11.5px;color:var(--accent-green-fg);line-height:1.55">No subscriptions, no paywalls, no ads. No data selling — ever.</div>
       </div>
       <div style="padding:14px 16px;background:linear-gradient(135deg,#FEF3C7 0%,#FDE68A 100%);border-radius:12px;border:.5px solid #FCD34D">
         <div class="icon-tile" style="background:linear-gradient(135deg,#B45309,#F59E0B);margin-bottom:10px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
@@ -1772,8 +1699,8 @@
       <div style="flex:1;min-width:240px">
         <div style="font-size:10.5px;font-weight:700;color:var(--accent-amber-fg);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Like it? Support the work</div>
         <div style="font-size:15px;font-weight:700;color:var(--accent-amber-fg);letter-spacing:-.01em;margin-bottom:.5rem">Buy me a coffee ☕</div>
-        <p style="font-size:12.5px;line-height:1.6;color:var(--accent-amber-fg);margin:0 0 .75rem">PeptideGenius offers a free tier and Pro upgrades. If it's saved you time, money, or a missed dose, a small tip keeps the updates coming — and lets me spend weekends on new features instead of on rent.</p>
-        <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:#FFDD00;color:#0D0C22;text-decoration:none;font-size:13px;font-weight:700;border-radius:8px;border:.5px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.1);transition:all .15s ease;font-family:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 3px 8px rgba(0,0,0,.15)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 2px rgba(0,0,0,.1)'">
+        <p style="font-size:12.5px;line-height:1.6;color:var(--accent-amber-fg);margin:0 0 .75rem">PeptideGenius is free and stays free. If it's saved you time, money, or a missed dose, a small tip keeps the updates coming — and lets me spend weekends on new features instead of on rent.</p>
+        <a href="https://buymeacoffee.com/trackmypeps" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:#FFDD00;color:#0D0C22;text-decoration:none;font-size:13px;font-weight:700;border-radius:8px;border:.5px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.1);transition:all .15s ease;font-family:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 3px 8px rgba(0,0,0,.15)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 2px rgba(0,0,0,.1)'">
           <span style="font-size:15px">☕</span>
           <span>Buy me a coffee</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;margin-left:1px"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
@@ -1827,7 +1754,7 @@
   <div class="card">
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:.75rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#BE123C,#F43F5E)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><div style="font-size:11px;font-weight:700;color:var(--accent-rose-fg);text-transform:uppercase;letter-spacing:.08em">Backups &amp; Moving Devices</div></div>
     <details class="faq-q" open><summary>Where are the Save backup and Import buttons?</summary><div class="faq-a">They're hidden behind a deliberate gesture to prevent accidental taps. <strong>Tap the PeptideGenius syringe logo at the top-left of the app three times in quick succession</strong> (within about a second). The <strong>Save backup</strong> and <strong>Import</strong> buttons will appear right next to the logo. Tap the logo again (single tap) or load a file to hide them. This keeps casual pokes from triggering a file download while still making the controls easy to reach when you want them.</div></details>
-    <details class="faq-q"><summary>Why might my data disappear?</summary><div class="faq-a">Browsers tie saved data to the exact file path and origin. If you download a newer copy of the HTML file (e.g. <code>peptide_tracker (2).html</code>), the browser treats it as a different site and you'll see an empty tracker. Use <strong>Save backup</strong> regularly, or deploy the file to a stable URL like PeptideGenius.net.</div></details>
+    <details class="faq-q"><summary>Why might my data disappear?</summary><div class="faq-a">Browsers tie saved data to the exact file path and origin. If you download a newer copy of the HTML file (e.g. <code>peptide_tracker (2).html</code>), the browser treats it as a different site and you'll see an empty tracker. Use <strong>Save backup</strong> regularly, or deploy the file to a stable URL like peptidegenius.net.</div></details>
     <details class="faq-q"><summary>How do I back up my data?</summary><div class="faq-a"><strong>Triple-tap the PeptideGenius logo</strong> at the top-left of the app to reveal the hidden controls, then click <strong>Save backup</strong>. This downloads a JSON file containing all of your shots, stacks, inventory, and settings. Keep a copy somewhere safe (cloud drive, USB, email to yourself).</div></details>
     <details class="faq-q"><summary>How do I restore or move to a new device?</summary><div class="faq-a">Open the app on the new device, <strong>triple-tap the logo</strong> to reveal the hidden controls, then click <strong>Import</strong> and select your JSON backup. Everything will come across — shots, schedules, inventory, prices, and package tracking.</div></details>
     <details class="faq-q"><summary>How often should I back up?</summary><div class="faq-a">After any significant change (new stack, new inventory, dose adjustment), and at minimum once a week. The backup file is tiny — usually under 100 KB.</div></details>
@@ -1853,7 +1780,6 @@
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:.75rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#BE123C,#F43F5E)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg></div><div style="font-size:11px;font-weight:700;color:var(--accent-rose-fg);text-transform:uppercase;letter-spacing:.08em">General</div></div>
     <details class="faq-q"><summary>Is this really free?</summary><div class="faq-a">Yes. No paid tier, no trials, no ads. If you want to support the project, star it, share it, or give feedback.</div></details>
     <details class="faq-q"><summary>Can I install it as a phone app?</summary><div class="faq-a">Yes — PeptideGenius is a PWA. See the <strong>Install as App</strong> section above for step-by-step instructions for iPhone, Android, and desktop.</div></details>
-    <details class="faq-q"><summary>What's the difference between free and Pro?</summary><div class="faq-a"><strong>Free tier:</strong> 3 active peptides, 3 vials, 90 days of shot history, basic tracking, install as app.<br><br><strong>Pro tier ($5/mo, $49/yr, $79 lifetime):</strong> Unlimited peptides and vials, full shot history, supply forecasting, advanced analytics, cloud backup + sync, data export, priority support.<br><br>Cancel anytime. Start free, upgrade only if you need it. Use the <strong>✨ Pro</strong> button in the header to upgrade or restore a license key.</div></details>
     <details class="faq-q"><summary>Is this medical advice?</summary><div class="faq-a">No. PeptideGenius is a personal tracking tool. Peptides are research compounds in most jurisdictions. Always consult a qualified healthcare professional before starting, changing, or stopping any protocol.</div></details>
     <details class="faq-q"><summary>I found a bug / have a feature request.</summary><div class="faq-a">Email <a href="mailto:PeptideGenius@gmail.com" style="color:var(--accent-rose-fg);font-weight:600">PeptideGenius@gmail.com</a> with as much detail as possible. Screenshots help a lot.</div></details>
   </div>
@@ -1880,12 +1806,12 @@
         <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">PeptideGenius@gmail.com</div>
         <div style="font-size:11.5px;color:var(--color-text-secondary);line-height:1.5">Support, bug reports, feature requests, feedback</div>
       </a>
-      <a href="https://PeptideGenius.net" target="_blank" rel="noopener" style="display:block;padding:1.25rem 1.5rem;text-decoration:none;color:inherit;transition:background .15s ease" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='transparent'">
+      <a href="https://peptidegenius.net" target="_blank" rel="noopener" style="display:block;padding:1.25rem 1.5rem;text-decoration:none;color:inherit;transition:background .15s ease" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background='transparent'">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <div class="icon-tile-sm" style="background:linear-gradient(135deg,#4D7C0F,#65A30D)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
           <div style="font-size:11px;font-weight:700;color:var(--accent-lime-fg);text-transform:uppercase;letter-spacing:.08em">Website</div>
         </div>
-        <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">PeptideGenius.net</div>
+        <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);letter-spacing:-.01em;margin-bottom:3px">peptidegenius.net</div>
         <div style="font-size:11.5px;color:var(--color-text-secondary);line-height:1.5">Latest version, updates, and news</div>
       </a>
     </div>
@@ -1913,7 +1839,7 @@
   </div>
   <div class="card" style="border-top:3px solid #DC2626;background:linear-gradient(135deg,#FEF2F2 0%,#FEE2E2 100%)">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:.35rem"><div class="icon-tile-sm" style="background:linear-gradient(135deg,#991B1B,#DC2626)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div><div style="font-size:13px;font-weight:700;color:var(--accent-red-fg)">Report unauthorized copies</div></div>
-    <p style="font-size:12px;line-height:1.55;color:var(--accent-red-fg);margin:0">If you find PeptideGenius rehosted on a site other than <a href="https://PeptideGenius.net" style="color:var(--accent-red-fg);font-weight:600" target="_blank" rel="noopener">PeptideGenius.net</a> or being sold, please report it to <a href="mailto:PeptideGenius@gmail.com" style="color:var(--accent-red-fg);font-weight:600">PeptideGenius@gmail.com</a>.</p>
+    <p style="font-size:12px;line-height:1.55;color:var(--accent-red-fg);margin:0">If you find PeptideGenius rehosted on a site other than <a href="https://peptidegenius.net" style="color:var(--accent-red-fg);font-weight:600" target="_blank" rel="noopener">peptidegenius.net</a> or being sold, please report it to <a href="mailto:PeptideGenius@gmail.com" style="color:var(--accent-red-fg);font-weight:600">PeptideGenius@gmail.com</a>.</p>
   </div>
 </div>
 </div>
@@ -2268,20 +2194,18 @@
         integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG"
         crossorigin="anonymous"
         referrerpolicy="no-referrer" defer></script>
-<script src="assets/app/core.js?v=20260728-import-cal-fix"></script>
+<script src="assets/app/core.js?v=20260724-backup-remind2"></script>
 <footer style="text-align:center;padding:1.5rem 1rem .75rem;font-size:10.5px;color:var(--color-text-tertiary);letter-spacing:.02em;max-width:760px;margin:0 auto">
   <div style="padding:10px 14px;margin-bottom:12px;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:10px;font-size:10.5px;line-height:1.55;color:var(--color-text-secondary);text-align:left">
     <div style="font-weight:700;color:var(--color-text-primary);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Disclaimer</div>
     PeptideGenius is a personal tracking tool, not medical advice, diagnosis, or treatment. Nothing here is reviewed by a licensed clinician. Most peptides discussed are <em>research compounds</em> — not FDA-approved for human use outside of specific prescription contexts. Always consult a qualified healthcare professional before starting, changing, or stopping any protocol. You are solely responsible for your own choices, sourcing, sterility, and injection technique. Use of this tool means you accept all risk.
   </div>
-  <div>© 2026 <a href="https://PeptideGenius.net" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.net</a> · All rights reserved · <a href="https://studio.buymeacoffee.com/dashboard" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
-  <div style="margin-top:3px;opacity:.6;font-size:9.5px;letter-spacing:.05em">Unauthorized redistribution prohibited · PG-2026Q2</div>
+  <div>© 2026 <a href="https://peptidegenius.net" style="color:inherit;text-decoration:none;font-weight:600">PeptideGenius.net</a> · All rights reserved · <a href="https://buymeacoffee.com/trackmypeps" target="_blank" rel="noopener noreferrer" style="color:#B45309;text-decoration:none;font-weight:600" title="Support PeptideGenius">☕ Support</a></div>
+  <div style="margin-top:3px;opacity:.6;font-size:9.5px;letter-spacing:.05em">Unauthorized redistribution prohibited · TMP-2026Q2</div>
 </footer>
 
-<script src="https://js.stripe.com/v3/"></script>
-<script src="assets/app/pg-paywall.js?v=20260728-checkout-keys"></script>
-<script src="assets/app/postload-patches.js?v=20260728-import-rev-fix"></script>
-<script src="assets/app/vitals.js?v=20260709-weight"></script>
+<script src="assets/app/postload-patches.js?v=20260728-backup-remind-fix"></script>
+<script src="assets/app/vitals.js?v=20260709-daily"></script>
 <script>
 /* Calendar date focus — inline fallback when cached postload/core miss setFocusDate wiring */
 (function(){

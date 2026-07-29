@@ -1,5 +1,5 @@
 /* ============================================================================
-   vitals.js — TrackMyPeps "Vitals" health-metrics feature (self-contained IIFE)
+   vitals.js — PeptideGenius "Vitals" health-metrics feature (self-contained IIFE)
    ----------------------------------------------------------------------------
    Isolated from the app's fragile render paths. Talks to core via:
      - window.S            plain global state object
@@ -44,7 +44,6 @@
   var currentRange = '90d';
   var vChart = null;
   var armedDeleteId = null;
-  var vtdWRange = '90d';
 
   /* ---------- tiny helpers ---------------------------------------------- */
   function g(id) { return doc.getElementById(id); }
@@ -536,16 +535,6 @@
       '.vtd-ilabel{font-size:12px;color:#8a9aa6}' +
       '.vtd-ival{font-size:15px;font-weight:600;color:#1c2b33}' +
       '.vtd-ival-warn{color:#C08A3E}' +
-      '.vtd-wpills{display:flex;gap:4px}' +
-      '.vtd-wpill{font-size:11px;padding:3px 9px;border-radius:8px;background:#f1f5f8;color:#93a3af;cursor:pointer}' +
-      '.vtd-wpill.on{background:#2DAFA8;color:#fff;font-weight:600}' +
-      '.vtd-wtop{display:flex;align-items:baseline;gap:10px}' +
-      '.vtd-wbig{font-size:32px;font-weight:600;color:#1c2b33;letter-spacing:-.025em;font-variant-numeric:tabular-nums}' +
-      '.vtd-wbig span{font-size:13px;color:#93a3af;font-weight:400}' +
-      '.vtd-wdelta{font-size:13px;font-weight:600}' +
-      '.vtd-wd-down{color:#1f9d74}.vtd-wd-up{color:#C0603E}' +
-      '.vtd-wsub{font-size:11.5px;color:#93a3af;margin:2px 0 10px}' +
-      '.vtd-wchart svg{width:100%;height:110px;display:block}' +
       '#pg-stack #gpt-daily-cockpit,#pg-stack #gpt-daily-command,#pg-stack #gpt-stack-ai,#pg-stack #hero-stats,#pg-stack .gpt-classic-stack,#pg-stack #circulation-card,#pg-stack #interval-card{display:none !important}' +
       '[data-theme="dark"] .vtd-weekday,[data-theme="dark"] .vtd-vval,[data-theme="dark"] .vtd-tname,[data-theme="dark"] .vtd-ival,[data-theme="dark"] .vtd-statline b{color:#E5E7EB}' +
       '[data-theme="dark"] .vtd-when,[data-theme="dark"] .vtd-kicker,[data-theme="dark"] .vtd-vlabel,[data-theme="dark"] .vtd-meta,[data-theme="dark"] .vtd-tmeta,[data-theme="dark"] .vtd-tstat,[data-theme="dark"] .vtd-statline,[data-theme="dark"] .vtd-ilabel{color:#94A3B8}' +
@@ -556,8 +545,6 @@
       '[data-theme="dark"] .vtd-today-row+.vtd-today-row{border-top-color:rgba(148,163,184,.14)}' +
       '[data-theme="dark"] .vtd-hair{background:rgba(148,163,184,.14)}' +
       '[data-theme="dark"] .vtd-bar{background:#23323d}' +
-      '[data-theme="dark"] .vtd-wbig{color:#E5E7EB}' +
-      '[data-theme="dark"] .vtd-wpill{background:#23323d;color:#94A3B8}' +
       '[data-theme="dark"] .vtd-link,[data-theme="dark"] .vtd-tstat-on{color:#2DAFA8}';
     var st = doc.createElement('style'); st.id = 'vtd-style'; st.textContent = css;
     (doc.head || doc.documentElement).appendChild(st);
@@ -667,37 +654,6 @@
       return esc(last.peptide || 'Shot') + ' \u00B7 ' + when;
     } catch (_) { return 'No shots logged yet'; }
   }
-  function vtdWeightSvg(pts) {
-    var W = 380, H = 110, pad = 8;
-    if (!pts || pts.length < 2) return '';
-    var min = Math.min.apply(null, pts), max = Math.max.apply(null, pts), rng = (max - min) || 1, n = pts.length;
-    var xy = pts.map(function (v, i) { var x = (i / (n - 1)) * W; var y = pad + (1 - (v - min) / rng) * (H - 2 * pad); return x.toFixed(1) + ',' + y.toFixed(1); });
-    var line = xy.join(' '), area = line + ' ' + W + ',' + H + ' 0,' + H, last = xy[xy.length - 1].split(',');
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
-      '<polyline points="' + area + '" fill="#2DAFA8" opacity="0.07"></polyline>' +
-      '<polyline points="' + line + '" fill="none" stroke="#2DAFA8" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>' +
-      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4" fill="#2DAFA8"></circle></svg>';
-  }
-  function vtdWeightCard() {
-    try {
-      var m = metricByKey('w'); if (!m) return '';
-      var es = entriesWith(m);
-      var since = vtdWRange === '30d' ? Date.now() - 30 * 86400000 : vtdWRange === '90d' ? Date.now() - 90 * 86400000 : 0;
-      var re = es.filter(function (e) { return entryMs(e) >= since; });
-      var pills = ['30d', '90d', 'All'].map(function (r) { return '<span class="vtd-wpill' + (r === vtdWRange ? ' on' : '') + '" data-vtd-wrange="' + r + '">' + r + '</span>'; }).join('');
-      var head = '<div class="vtd-kickrow" style="margin-bottom:12px"><span class="vtd-kicker">Weight</span><span class="vtd-wpills">' + pills + '</span></div>';
-      if (!re.length) return '<div class="vtd-card">' + head + '<div class="vtd-meta" style="padding:14px 0">Log your weight to see the trend.</div></div>';
-      var vals = re.map(function (e) { return m.toDisp(m.get(e)); });
-      var cur = vals[vals.length - 1], delta = Number((cur - vals[0]).toFixed(1));
-      var dcls = delta < 0 ? 'down' : (delta > 0 ? 'up' : '');
-      var dtxt = delta === 0 ? 'no change' : ((delta < 0 ? '\u2193 ' : '\u2191 ') + Math.abs(delta) + ' ' + m.unit());
-      return '<div class="vtd-card">' + head +
-        '<div class="vtd-wtop"><span class="vtd-wbig">' + cur + '<span> ' + esc(m.unit()) + '</span></span>' +
-        '<span class="vtd-wdelta vtd-wd-' + dcls + '">' + dtxt + '</span></div>' +
-        '<div class="vtd-wsub">' + (vtdWRange === 'All' ? 'since you started' : 'past ' + vtdWRange) + '</div>' +
-        '<div class="vtd-wchart">' + vtdWeightSvg(vals) + '</div></div>';
-    } catch (_) { return '<div class="vtd-card"><div class="vtd-meta">Weight unavailable.</div></div>'; }
-  }
   function renderVitalsSummary() {
     var el = g('vitals-daily-card');
     if (!el) return;
@@ -721,7 +677,13 @@
     }).join('') + extra : '<div class="vtd-meta" style="padding:6px 0">No doses scheduled today.</div>';
     var todayCard = '<div class="vtd-card"><div class="vtd-kickrow" style="margin-bottom:12px"><span class="vtd-kicker">Today</span>' +
       '<span class="vtd-meta">' + loggedN + ' logged \u00B7 ' + dueN + ' due</span></div>' + todayHtml + '</div>';
-    var weekCard = vtdWeightCard();
+    var wb = vtdWeekBars();
+    var bars = wb.counts.map(function (c, i) { var h = Math.round(14 + (c / wb.max) * 30); return '<div class="vtd-bar' + (i === wb.today ? ' vtd-bar-on' : '') + '" style="height:' + h + 'px"></div>'; }).join('');
+    var adh = vtdAdherence();
+    var weekCard = '<div class="vtd-card"><div class="vtd-kicker" style="margin-bottom:14px">This week</div>' +
+      '<div class="vtd-bars">' + bars + '</div><div class="vtd-hair"></div>' +
+      '<div class="vtd-statline"><span>Streak</span><b>' + vtdStreak() + ' days</b></div>' +
+      '<div class="vtd-statline"><span>Adherence</span><b>' + (adh == null ? '\u2014' : adh + '%') + '</b></div></div>';
     var ro = vtdRunout();
     var runCard = '<div class="vtd-card vtd-info" data-vtd-go="inventory"><span class="vtd-iico" style="background:#FCF3E5">\uD83D\uDCE6</span>' +
       '<div style="flex:1"><div class="vtd-ilabel">' + (ro.warn ? 'Running low' : 'Supply') + '</div>' +
@@ -742,7 +704,6 @@
     el.dataset.vtWired = '1';
     el.addEventListener('click', function (ev) {
       var t = ev.target; if (!t || !t.closest) return;
-      var wr = t.closest('[data-vtd-wrange]'); if (wr) { vtdWRange = wr.getAttribute('data-vtd-wrange'); renderVitalsSummary(); return; }
       var go = t.closest('[data-vtd-go]');
       if (go) { var nb = document.querySelector('#nav [data-pg=' + go.getAttribute('data-vtd-go') + ']'); if (nb) nb.click(); return; }
       if (t.closest('[data-vt-goto]')) { var nb2 = document.querySelector('#nav [data-pg=vitals]'); if (nb2) nb2.click(); }

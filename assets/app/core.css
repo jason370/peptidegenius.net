@@ -1,4 +1,4 @@
-/* TrackMyPeps core stylesheet */
+/* PeptideGenius core stylesheet */
 /* ===== extracted core style block ===== */
 :root{--color-background-primary:#ffffff;--color-background-secondary:#f5f5f4;--color-text-primary:#1a1a18;--color-text-secondary:#6b6b67;--color-text-tertiary:#8a8a86;--color-border-primary:#d1d1cc;--color-border-secondary:#e5e5e1;--color-border-tertiary:#ebebea;--calc-hero-bg:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);--calc-result-bg:linear-gradient(135deg,#EFF6FF 0%,#E0F2FE 100%);--calc-accent-border:#BFDBFE;--calc-tile-bg:#ffffff;--calc-tile-border:#BFDBFE;--calc-headline:#0F2A57;--calc-subheadline:#3B5A7E;--calc-label:#185FA5;--calc-badge-1-bg:#DBEAFE;--calc-badge-1-fg:#1E40AF;--calc-badge-2-bg:#D1FAE5;--calc-badge-2-fg:#065F46;--calc-badge-3-bg:#CFFAFE;--calc-badge-3-fg:#155E75;--calc-badge-4-bg:#FEF3C7;--calc-badge-4-fg:#92400E;--calc-badge-5-bg:#EDE9FE;--calc-badge-5-fg:#5B21B6;--calc-pill-fg:#059669;--calc-pill-dot:#059669;
   /* Semantic info-box tokens (Privacy modal boxes, storage banner). Each has bg/border/fg + a darker fg2 for emphasis text. */
@@ -916,7 +916,7 @@ th .th-ic svg{width:14px;height:14px;stroke-width:2;fill:none;stroke-linecap:rou
 }
 
 
-/* GPT-added final TrackMyPeps logo integration */
+/* GPT-added final PeptideGenius logo integration */
 .app-header{
   align-items:center !important;
   padding-top:.85rem !important;

@@ -1,7 +1,7 @@
-// TrackMyPeps core runtime
+// PeptideGenius core runtime
 // ===== extracted core runtime script =====
 /* ════════════════════════════════════════════════════════════════════════════
-   TRACKMYPEPS — MAIN APP SCRIPT
+   PEPTIDEGENIUS — MAIN APP SCRIPT
    ════════════════════════════════════════════════════════════════════════════
 
    TABLE OF CONTENTS  (search for "SECTION:" to jump)
@@ -1434,7 +1434,7 @@ function runPeptideTrackerImport(text,clearFileInput){
   const backupSchema=Number(imported._export_schema)||0;
   const appSchema=(typeof TMP_SCHEMA_VERSION!=='undefined')?TMP_SCHEMA_VERSION:1;
   if(backupSchema>appSchema){
-    if(!confirm('This backup was exported by a newer version of TrackMyPeps (schema v'+backupSchema+', this app understands v'+appSchema+'). Some fields may be dropped. Continue anyway?')){clearIn();return;}
+    if(!confirm('This backup was exported by a newer version of PeptideGenius (schema v'+backupSchema+', this app understands v'+appSchema+'). Some fields may be dropped. Continue anyway?')){clearIn();return;}
   }
   const importVialN=Array.isArray(clean.vials)?clean.vials.length:0;
   const importParts=[clean.inv.length+' peptides',((clean.shots||[]).length)+' shots'];
@@ -1468,76 +1468,20 @@ function runPeptideTrackerImport(text,clearFileInput){
   seedSupplies();
   S._supplies_seeded=true;
   S._mig=true;
-  S._hadSaved=true;
-  // Full backup import must restore Weekly Calendar / Daily Stack. If the
-  // calendar clear-lock is active, save() pre-hooks prune S.sched down to an
-  // allow-list (usually empty after a fresh PG session) and the imported
-  // schedule never appears. Clear the lock and allow every imported peptide.
-  try{
-    if(window.tmpCalClearGuard){
-      const names=(S.inv||[]).map(i=>i&&i.name).filter(Boolean);
-      Object.keys(S.sched||{}).forEach(k=>{
-        const n=String(k||'').split('/')[0];
-        if(n) names.push(n);
-      });
-      tmpCalClearGuard.clear();
-      // If something re-marks the lock before save finishes, still allow names.
-      names.forEach(n=>{try{tmpCalClearGuard.allowName(n);}catch(_){}});
-    }
-  }catch(_){}
-  try{window._tmpBypassCalEnforce=true;}catch(_){}
-  // CRITICAL: saveNow() calls reconcileFromDisk() before writing. If the imported
-  // backup has an older/missing _saveRev than what's already in localStorage,
-  // reconcile would overwrite the import with the previous (often empty) state.
-  // Bump rev above disk so the imported data always wins this flush.
-  try{
-    const diskRaw=localStorage.getItem('peptide_tracker');
-    const disk=diskRaw?JSON.parse(diskRaw):null;
-    const diskRev=Number(disk&&disk._saveRev)||0;
-    const importRev=Number(S._saveRev)||0;
-    S._saveRev=Math.max(diskRev,importRev)+1;
-  }catch(_){S._saveRev=(Number(S._saveRev)||0)+1;}
-  try{
-    saveNow(); // must be synchronous: the verify below reads localStorage right back
-  }finally{
-    try{window._tmpBypassCalEnforce=false;}catch(_){}
-  }
+  saveNow(); // must be synchronous: the verify below reads localStorage right back
   const verifyRaw=localStorage.getItem('peptide_tracker');
-  let verified=false;
-  try{
-    const v=verifyRaw?JSON.parse(verifyRaw):null;
-    verified=!!(v&&Array.isArray(v.inv)&&v.inv.length===S.inv.length);
-  }catch(_){verified=!!(verifyRaw&&verifyRaw.length>100);}
+  const verified=verifyRaw&&verifyRaw.length>100;
   try{
     rebuildCM();buildLegend();popSel();
     renderInv(true);
     renderVials(true);
-    try{if(typeof renderLog==='function')renderLog();}catch(_){}
-    try{if(typeof renderStack==='function')renderStack();}catch(_){}
-    try{if(typeof renderCal==='function')renderCal({force:true});}catch(_){}
     rr();
-    // Land on Weekly Calendar so imported schedule is obvious.
-    try{
-      const calBtn=document.querySelector('#nav [data-pg="calendar"]');
-      if(calBtn)calBtn.click();
-      setTimeout(function(){
-        try{if(typeof renderCal==='function')renderCal({force:true});}catch(_){}
-      },80);
-    }catch(_){}
   }catch(err){console.error('Render after import:',err);}
   const loadedVialN=(S.vials||[]).length;
-  const loadedShotN=(S.shots||[]).length;
-  let loadedSchedN=0;
-  try{
-    loadedSchedN=Object.keys(S.sched||{}).filter(k=>{
-      const v=S.sched[k];
-      return v===true||(v&&typeof v==='object');
-    }).length;
-  }catch(_){}
   if(verified){
-    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+(loadedShotN?' + '+loadedShotN+' shots':'')+(loadedSchedN?' + '+loadedSchedN+' calendar slots':'')+' loaded and saved.');
+    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+' loaded and saved.');
   }else{
-    alert('⚠️ Import loaded in memory but browser save verify failed. Try Import again, or use a different browser. (Inventory now shows what was loaded.)');
+    alert('⚠️ Import loaded but saving to this browser failed. Your data may not survive a refresh. Check browser storage settings or try a different browser.');
   }
   clearLgSiteUserPicked();
   clearLgSiteScratchStorage();
@@ -1696,7 +1640,7 @@ function load(){
   S.wkOff=0;
   rebuildCM();
 }
-const __TMP_ORIGIN__='trackmypeps.com/v1/TMP-2026Q2-a7f3d9e2';
+const __TMP_ORIGIN__='peptidegenius.net/v1/TMP-2026Q2-a7f3d9e2';
 function showSaved(){const el=g('save-ind');if(!el)return;el.textContent='✓ Saved';el.style.color='';el.style.opacity='1';el.setAttribute('data-origin',__TMP_ORIGIN__);clearTimeout(saveTimer);saveTimer=setTimeout(()=>{el.style.opacity='0';},2000);}
 function showSaveFailed(){
   const el=g('save-ind');
@@ -1744,7 +1688,7 @@ function applyHostBanner(){
     bar.id='tmp-host-banner';
     bar.style.cssText='margin:0 0 12px;padding:10px 14px;background:var(--info-amber-bg);border:1px solid var(--info-amber-border);border-radius:10px;color:var(--info-amber-fg2);font-size:12px;display:flex;align-items:center;gap:10px;line-height:1.5';
     bar.innerHTML='<span style="font-size:16px;flex-shrink:0">ℹ️</span>'
-      +'<span style="flex:1">This copy of TrackMyPeps is running on <code>'+escH(host)+'</code>, which isn\'t one of the recognised hosts. The app still works locally — no data leaves your device. If this is an unofficial mirror, the canonical version lives at <a href="https://trackmypeps.com" style="color:var(--info-amber-fg);text-decoration:underline">trackmypeps.com</a>.</span>'
+      +'<span style="flex:1">This copy of PeptideGenius is running on <code>'+escH(host)+'</code>, which isn\'t one of the recognised hosts. The app still works locally — no data leaves your device. If this is an unofficial mirror, the canonical version lives at <a href="https://peptidegenius.net" style="color:var(--info-amber-fg);text-decoration:underline">peptidegenius.net</a>.</span>'
       +'<button class="btn" type="button" style="padding:3px 10px;font-size:11px;flex-shrink:0">Dismiss</button>';
     bar.querySelector('button').addEventListener('click',()=>{
       try{sessionStorage.setItem('tmp_host_banner_dismissed','1');}catch(e){}
@@ -1798,7 +1742,7 @@ function applyStorageBanner(){
   }catch(e){banner.style.display='none';}
 }
 
-// PWA install banner — prompts the user to add TrackMyPeps to their home
+// PWA install banner — prompts the user to add PeptideGenius to their home
 // screen. On Chromium browsers we can't show it until `beforeinstallprompt`
 // has fired (the browser gates installability on engagement signals). On iOS
 // Safari the event never fires, so we detect iOS and show a manual-instructions
@@ -1842,7 +1786,7 @@ function applyInstallBanner(){
     const isSafari=/Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS/.test(ua);
     if(isIos&&isSafari){
       g('ib-title').textContent='Add to Home Screen';
-      g('ib-body').textContent='Install TrackMyPeps for one-tap access — your data stays on this device. Tap Install for instructions.';
+      g('ib-body').textContent='Install PeptideGenius for one-tap access — your data stays on this device. Tap Install for instructions.';
       banner.style.display='';
       return;
     }
@@ -3689,14 +3633,6 @@ function renderRotation(){
 
 function renderLogShotRows(){
   let shotRows=[...S.shots];
-  // PeptideGenius: filter shots by history cutoff for free users
-  if(typeof PG!=='undefined'){
-    const cutoff=PG.historyCutoff();
-    if(cutoff){
-      const cutoffStr=cutoff.toISOString().split('T')[0];
-      shotRows=shotRows.filter(shot=>shot.date>=cutoffStr);
-    }
-  }
   const s=shotRows.sort((a,b)=>{
     // Descending by date, then by recency within the same date (last-logged-first).
     // id is monotonic (S.nS++), so newer shots have higher ids regardless of time field.
@@ -4963,14 +4899,6 @@ function saveVialForm(){
     recomputeStockFromVials(v.peptideName);
   }else{
     if(!Array.isArray(S.vials))S.vials=[];
-    // PeptideGenius: enforce free-tier vial limit.
-    if(typeof PG!=='undefined' && !PG.checkVialLimit()){
-      m.textContent='Free plan is limited to '+PG.LIMITS.vials+' vials. Upgrade to Pro for unlimited.';
-      m.style.color='#A32D2D';
-      PG.openUpgrade('vial-limit');
-      _vlSaving=false;
-      return false;
-    }
     // Add mode: spawn `qty` rows. Each gets its own id.
     for(let i=0;i<qty;i++){
       S.vials.push(Object.assign({id:S.nV++,remainingMcg:baseFields.totalMcg},baseFields));
@@ -5210,13 +5138,6 @@ function addPep(){
   const v=getPV();const m=g('pf-msg');
   if(!v.name){m.textContent='Enter name.';m.style.color='#A32D2D';return;}
   if(S.inv.find(i=>i.name.toLowerCase()===v.name.toLowerCase())){m.textContent='Already exists. Use Edit to modify it.';m.style.color='#A32D2D';return;}
-  // PeptideGenius: enforce free-tier peptide limit (blends/supplies don't count).
-  if(typeof PG!=='undefined' && !v.isBlend && !v.isSupply && !PG.checkPeptideLimit()){
-    m.textContent='Free plan is limited to '+PG.LIMITS.peptides+' peptides. Upgrade to Pro for unlimited.';
-    m.style.color='#A32D2D';
-    PG.openUpgrade('peptide-limit');
-    return;
-  }
   const rawStk=pfMealLaneFromForm()||gv('pf-stk');
   const stk=pfStackSlot(rawStk);
   if(pfStackActive(rawStk)&&v.days.length===0){m.textContent='Select at least one scheduled day, or choose "No stack".';m.style.color='#A32D2D';return;}
@@ -9329,7 +9250,7 @@ function maybeAutoFetchTracking(){
     // the new metadata fields are prefixed with _export_ so they're obviously non-user-data
     // and easy to skip on import without bloating the allow-list.
     const payload=Object.assign(
-      {_export_schema:TMP_SCHEMA_VERSION,_export_at:new Date().toISOString(),_export_app:'TrackMyPeps'},
+      {_export_schema:TMP_SCHEMA_VERSION,_export_at:new Date().toISOString(),_export_app:'PeptideGenius'},
       S
     );
     const data=JSON.stringify(payload,null,2);
@@ -9393,22 +9314,6 @@ function maybeAutoFetchTracking(){
       wrap.style.display='none';
     });
     lim.addEventListener('click',()=>{g('import-file').click();});
-    // Always-visible header Backup / Import (same handlers as logo reveal)
-    const hdrBackup=document.getElementById('hdr-backup-btn');
-    const hdrImport=document.getElementById('hdr-import-btn');
-    if(hdrBackup){
-      hdrBackup.addEventListener('click',()=>{
-        if(typeof window.doExport!=='function'){alert('Please wait for the app to finish loading, then try again.');return;}
-        window.doExport('my-tracker-manual-');
-      });
-    }
-    if(hdrImport){
-      hdrImport.addEventListener('click',()=>{
-        const inp=g('import-file');
-        if(!inp){alert('Import control missing — hard refresh and try again.');return;}
-        inp.click();
-      });
-    }
   })();
   g('import-file').addEventListener('change',e=>{
     const f=e.target.files&&e.target.files[0];if(!f){e.target.value='';return;}

@@ -1,4 +1,4 @@
-﻿/* TrackMyPeps versioned patch styles */
+﻿/* PeptideGenius versioned patch styles */
 /* ===== extracted style block ===== */
 .sc.sc-logged{position:relative}
 .sc-needle{position:absolute;top:2px;right:3px;font-size:27px;line-height:1;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)) drop-shadow(0 0 2px rgba(255,255,255,.55));transform:rotate(-12deg);transform-origin:center}
@@ -73,12 +73,12 @@ img#app-logo{
   background: var(--color-background-primary, #1B1F2A) !important;
   background-image: none !important;
 }
-/* PeptideGenius: larger header logo (brand-first) */
+/* Logo 10% smaller than v33.375-stable-vendor-post-import-review (clamp values were 420/62vw/880) */
 .gpt-site-logo, .app-logo-img, img#app-logo{
-  width: clamp(400px, 58vw, 780px) !important;
+  width: clamp(270px, 39.6vw, 558px) !important;
   max-width: 100% !important;
   height: auto !important;
-  max-height: 150px !important;
+  max-height: 95px !important;
   object-fit: contain !important;
   object-position: left center !important;
   margin: 0 !important;
@@ -86,10 +86,10 @@ img#app-logo{
   flex: 0 0 auto !important;
 }
 @media(max-width:760px){
-  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 560px) !important; max-height:120px !important; }
+  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 396px) !important; max-height:81px !important; }
 }
 @media(max-width:520px){
-  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 420px) !important; max-height:100px !important; }
+  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 288px) !important; max-height:67px !important; }
 }
 /* v0.27.99: belt+suspenders — header-tabs wrapper removed from HTML */
 .header-tabs{ display: contents !important; background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
@@ -1836,7 +1836,7 @@ nav#nav{
 
 
 /* ===== extracted style block ===== */
-/* v33.375-stable-vendor-post-import-review: Stack Optimizer palette aligned to TrackMyPeps logo: warm Track, magenta My, blue/teal Peps */
+/* v33.375-stable-vendor-post-import-review: Stack Optimizer palette aligned to PeptideGenius logo: warm Track, magenta My, blue/teal Peps */
 #pg-optimizer{
   --tmp-logo-track:#F97316;
   --tmp-logo-track-soft:#FDBA74;
@@ -2042,7 +2042,7 @@ nav#nav{
 
 
 /* ===== extracted style block ===== */
-/* v33.375-stable-vendor-post-import-review: bring Stack Builder + Daily Stack onto the TrackMyPeps logo palette */
+/* v33.375-stable-vendor-post-import-review: bring Stack Builder + Daily Stack onto the PeptideGenius logo palette */
 :root{
   --tmp-peach-1:#FFF2EB;
   --tmp-peach-2:#FADFD1;
@@ -3347,7 +3347,7 @@ nav#nav{
 
 
 /* ===== extracted style block ===== */
-/* TrackMyPeps v2.1 — Clear All shared UI (click-twice + undo) */
+/* PeptideGenius v2.1 — Clear All shared UI (click-twice + undo) */
 .btn.tmp-clearall{
   --c-fg:#991B1B; --c-bd:#FCA5A5; --c-bg:transparent;
   color:var(--c-fg); border:.5px solid var(--c-bd); background:var(--c-bg);
@@ -8334,20 +8334,3 @@ input[type="range"]{accent-color:#0EA5A4}
 [data-theme="dark"] #pg-catalog .cat-card{background:linear-gradient(180deg,#111827,#0F1626)!important;border-color:rgba(148,163,184,.16)!important;box-shadow:none!important}
 [data-theme="dark"] #pg-catalog .cat-card-hide,[data-theme="dark"] #pg-catalog .cat-card-unhide,[data-theme="dark"] #pg-catalog .cat-card-edit{background:rgba(17,24,39,.85)!important;border-color:rgba(148,163,184,.22)!important;color:#94A3B8!important}
 /* ════ end dark mode re-skin ════ */
-
-
-/* ===== PeptideGenius logo size (final override) ===== */
-.gpt-site-logo, .app-logo-img, img#app-logo{
-  width: clamp(400px, 58vw, 780px) !important;
-  max-width: 100% !important;
-  height: auto !important;
-  max-height: 150px !important;
-  object-fit: contain !important;
-  object-position: left center !important;
-}
-@media(max-width:760px){
-  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 560px) !important; max-height:120px !important; }
-}
-@media(max-width:520px){
-  .gpt-site-logo, .app-logo-img, img#app-logo{ width:min(100%, 420px) !important; max-height:100px !important; }
-}

@@ -1,4 +1,4 @@
-/* TrackMyPeps service worker — minimal, safe, versioned.
+/* PeptideGenius service worker — minimal, safe, versioned.
    Strategy:
    - Navigations (the HTML shell): network-first, cached copy as offline fallback.
      HTML is the version pointer, so it must always try the network first.

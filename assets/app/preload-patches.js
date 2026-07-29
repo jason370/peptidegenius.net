@@ -19,7 +19,7 @@ window.TMP_OPTIMIZER_ENABLED = false;
   },true);
 })();
 
-// TrackMyPeps pre-core patch runtime
+// PeptideGenius pre-core patch runtime
 // ===== extracted pre-core patch script =====
 (function(){
   function px(n){return Math.max(0, Math.round(n));}
@@ -143,7 +143,7 @@ window.tmpInventoryToast = function(text, color){
     {name:'Vitamin B3', dose:'per label', freq:'Daily', notes:'with food'}
   ];
   // v33.375-stable-vendor-post-import-review: permanent vitamin log memory. The main S.vitsLog is still saved in
-  // the normal TrackMyPeps backup, but we also mirror it to a separate localStorage
+  // the normal PeptideGenius backup, but we also mirror it to a separate localStorage
   // key so taken/not-taken history survives daily re-renders, page switches, and
   // accidental partial state rewrites.
   const VITS_LOG_KEY = 'tmp.vitsLog.v33';
