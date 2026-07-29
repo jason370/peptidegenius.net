@@ -1468,20 +1468,44 @@ function runPeptideTrackerImport(text,clearFileInput){
   seedSupplies();
   S._supplies_seeded=true;
   S._mig=true;
+  S._hadSaved=true;
+  // CRITICAL: saveNow() calls reconcileFromDisk() before writing. If the imported
+  // backup has an older/missing _saveRev than what's already in localStorage,
+  // reconcile would overwrite the import with the previous (often empty) state.
+  // Bump rev above disk so the imported data always wins this flush.
+  try{
+    const diskRaw=localStorage.getItem('peptide_tracker');
+    const disk=diskRaw?JSON.parse(diskRaw):null;
+    const diskRev=Number(disk&&disk._saveRev)||0;
+    const importRev=Number(S._saveRev)||0;
+    S._saveRev=Math.max(diskRev,importRev)+1;
+  }catch(_){S._saveRev=(Number(S._saveRev)||0)+1;}
   saveNow(); // must be synchronous: the verify below reads localStorage right back
   const verifyRaw=localStorage.getItem('peptide_tracker');
-  const verified=verifyRaw&&verifyRaw.length>100;
+  let verified=false;
+  try{
+    const v=verifyRaw?JSON.parse(verifyRaw):null;
+    verified=!!(v&&Array.isArray(v.inv)&&v.inv.length===S.inv.length);
+  }catch(_){verified=!!(verifyRaw&&verifyRaw.length>100);}
   try{
     rebuildCM();buildLegend();popSel();
     renderInv(true);
     renderVials(true);
+    try{if(typeof renderLog==='function')renderLog();}catch(_){}
+    try{if(typeof renderCal==='function')renderCal({force:true});}catch(_){}
     rr();
+    // Land on Inventory so the user immediately sees imported peptides/vials.
+    try{
+      const invBtn=document.querySelector('#nav [data-pg="inventory"]');
+      if(invBtn)invBtn.click();
+    }catch(_){}
   }catch(err){console.error('Render after import:',err);}
   const loadedVialN=(S.vials||[]).length;
+  const loadedShotN=(S.shots||[]).length;
   if(verified){
-    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+' loaded and saved.');
+    alert('Import complete! '+S.inv.length+' inventory items'+(loadedVialN?' + '+loadedVialN+' vials':'')+(loadedShotN?' + '+loadedShotN+' shots':'')+' loaded and saved.');
   }else{
-    alert('⚠️ Import loaded but saving to this browser failed. Your data may not survive a refresh. Check browser storage settings or try a different browser.');
+    alert('⚠️ Import loaded in memory but browser save verify failed. Try Import again, or use a different browser. (Inventory now shows what was loaded.)');
   }
   clearLgSiteUserPicked();
   clearLgSiteScratchStorage();
