@@ -630,7 +630,18 @@ window.__tmpPgDebounced=function(key,fn,ms){
         if(window._tmpBypassCalEnforce) return;
         const pg=document.querySelector('#nav button.on, .hdr-tab-btn.on');
         if(pg&&pg.dataset.pg==='packages') return;
-        if(window.tmpCalClearGuard) tmpCalClearGuard.enforceLight();
+        if(!window.tmpCalClearGuard) return;
+        // Stale lock + persisted slots: clear lock instead of wiping calendar.
+        if(tmpCalClearGuard.isActive() && window.S){
+          try {
+            const has = Object.keys(S.sched || {}).some(function(k){
+              const v = S.sched[k];
+              return v === true || (v && typeof v === 'object');
+            });
+            if(has){ tmpCalClearGuard.clear(); return; }
+          } catch(_){}
+        }
+        tmpCalClearGuard.enforceLight();
       } catch(_){}
     }
     // Save-chain merge: pre-flush hook instead of wrapping window.save.
@@ -646,13 +657,33 @@ window.__tmpPgDebounced=function(key,fn,ms){
   // pre-clear calendar (the #1 repopulate bug) and must never survive reload.
   try { localStorage.removeItem('tmp.undo.tmp-clear-cal'); } catch(_){}
 
-  try { if (tmpCalClearGuard.isActive()) tmpCalClearGuard.enforce(); } catch(_){}
+  // If a schedule is already persisted but the clear-lock flag is still set,
+  // the lock is stale (e.g. after a full JSON import that was pruned on save).
+  // Prefer the saved calendar over wiping it on every page load / render.
+  function schedHasActiveSlots(sched){
+    try {
+      return Object.keys(sched || {}).some(function(k){
+        const v = sched[k];
+        return v === true || (v && typeof v === 'object');
+      });
+    } catch(_){ return false; }
+  }
+  function enforceOrClearStaleLock(){
+    if(!window.tmpCalClearGuard || !tmpCalClearGuard.isActive()) return;
+    try {
+      if(window.S && schedHasActiveSlots(S.sched)){
+        tmpCalClearGuard.clear();
+        return;
+      }
+    } catch(_){}
+    try { tmpCalClearGuard.enforce(); } catch(_){}
+  }
+
+  try { enforceOrClearStaleLock(); } catch(_){}
 
   [0, 50, 300].forEach(function(ms){
     setTimeout(function(){
-      try {
-        if(window.tmpCalClearGuard) tmpCalClearGuard.enforce();
-      } catch(_){}
+      try { enforceOrClearStaleLock(); } catch(_){}
     }, ms);
   });
 
