@@ -3854,6 +3854,14 @@ function refreshLogAfterShotChange(){
   try{renderLogShotRows();}catch(_){}
   try{scheduleRenderLogHeavy();}catch(_){}
 }
+// Shot Log dose unit when inventory/last-shot has none. Prefer mg (not mcg/units).
+const SHOT_LOG_DEFAULT_DOSE_UNIT='mg';
+function normalizeShotLogDoseUnit(unit){
+  const u=String(unit||'').trim().toLowerCase();
+  if(u==='mg'||u==='mcg'||u==='pill') return u;
+  // "units"/mL/iu are volume-ish — never use them as the dose unit default.
+  return SHOT_LOG_DEFAULT_DOSE_UNIT;
+}
 function applyCalcLastToShotLogForm(resolved,last){
   if(!last||last.over||!resolved||!resolved.pep) return false;
   const pepSelectEl=g('lg-pep'),doseEl=g('lg-dose'),doseUnitEl=g('lg-dose-unit'),volEl=g('lg-vol'),volUnitEl=g('lg-vol-unit');
@@ -3872,20 +3880,13 @@ function applyCalcLastToShotLogForm(resolved,last){
     applyLgSiteDomValue('');
   }
   sv('lg-dose',last.dose);
-  sv('lg-dose-unit',last.doseUnit||'mcg');
-  if(last.mode==='oil'){
-    if(last.units!=null&&!isNaN(last.units)){
-      sv('lg-vol-unit','units');
-      sv('lg-vol',last.units);
-    }else if(last.volMl>0){
-      sv('lg-vol-unit','mL');
-      sv('lg-vol',last.volMl.toFixed(3).replace(/\.?0+$/,''));
-    }
-  }else if(gv('lg-vol-unit')==='units'){
-    sv('lg-vol',Math.round(last.volMl*100));
-  }else{
+  sv('lg-dose-unit',normalizeShotLogDoseUnit(last.doseUnit));
+  // Shot Log volume always defaults to mL (U-100: 100 units = 1 mL).
+  sv('lg-vol-unit','mL');
+  if(last.volMl>0){
     sv('lg-vol',last.volMl.toFixed(3).replace(/\.?0+$/,''));
-    sv('lg-vol-unit','mL');
+  }else if(last.units!=null&&!isNaN(last.units)){
+    sv('lg-vol',(Number(last.units)/100).toFixed(3).replace(/\.?0+$/,''));
   }
   // Calc → log is always "log what I just drew now." Never inherit a leftover
   // calendar focus day (e.g. user tapped Wednesday earlier, then logged from calc).
@@ -5577,7 +5578,7 @@ function popSel(){
     const parts=[];
     if(active)parts.push('🧊×'+i.fr);
     else if((i.fz||0)>0)parts.push('❄ freezer only');
-    if(i.dose)parts.push(i.dose+(i.doseUnit||'mcg'));
+    if(i.dose)parts.push(i.dose+normalizeShotLogDoseUnit(i.doseUnit));
     const tag=parts.length?' — '+parts.join(' · '):'';
     return '<option value="'+i.name.replace(/"/g,'&quot;')+'">'+i.name+tag+'</option>';
   }).join('');
@@ -5606,7 +5607,7 @@ function rememberPepDose(pepName, dose, doseUnit, freq){
     if(!(n>0)) return;
     const pep=(S.inv||[]).find(p=>p&&!p.isSupply&&p.name===pepName);
     if(!pep) return;
-    const unit=doseUnit||'mcg';
+    const unit=normalizeShotLogDoseUnit(doseUnit);
     pep.dose=n;
     pep.doseUnit=unit;
     const patch={dose:n, doseUnit:unit};
@@ -5637,20 +5638,27 @@ function autofillShotLogForPep(pepName){
   // Prefer remembered / inventory dose, then last shot (volume/site still come from last shot).
   const pepInv=(S.inv||[]).find(i=>i.name===pepName);
   const rememberedDose=(pepInv&&pepInv.lastCalc&&pepInv.lastCalc.dose>0)
-    ? {dose:pepInv.lastCalc.dose, doseUnit:pepInv.lastCalc.doseUnit||'mcg'}
-    : (pepInv&&pepInv.dose>0 ? {dose:pepInv.dose, doseUnit:pepInv.doseUnit||'mcg'} : null);
+    ? {dose:pepInv.lastCalc.dose, doseUnit:normalizeShotLogDoseUnit(pepInv.lastCalc.doseUnit)}
+    : (pepInv&&pepInv.dose>0 ? {dose:pepInv.dose, doseUnit:normalizeShotLogDoseUnit(pepInv.doseUnit)} : null);
   if(lastShot){
     if(rememberedDose){
       sv('lg-dose',rememberedDose.dose);
       sv('lg-dose-unit',rememberedDose.doseUnit);
     }else if(lastShot.dose!=null){
       sv('lg-dose',lastShot.dose);
-      sv('lg-dose-unit',lastShot.doseUnit||'mcg');
+      sv('lg-dose-unit',normalizeShotLogDoseUnit(lastShot.doseUnit));
+    }else{
+      sv('lg-dose-unit',SHOT_LOG_DEFAULT_DOSE_UNIT);
     }
     if(lastShot.volume!=null&&lastShot.volumeUnit!=='pill'){
-      const lastVolUnit=lastShot.volumeUnit||'mL';
-      sv('lg-vol-unit',lastVolUnit);
-      sv('lg-vol',lastShot.volume);
+      // Always prefer mL on Shot Log (convert U-100 syringe units → mL).
+      sv('lg-vol-unit','mL');
+      const v=Number(lastShot.volume)||0;
+      sv('lg-vol', (lastShot.volumeUnit==='units')
+        ? (v/100).toFixed(3).replace(/\.?0+$/,'')
+        : lastShot.volume);
+    }else{
+      sv('lg-vol-unit','mL');
     }
     if(!_lgSiteUserPicked){
       const siteFromLast=lastShot?(lastShot.site||''):'';
@@ -5660,17 +5668,23 @@ function autofillShotLogForPep(pepName){
     return;
   }
   // No prior shot — fall back to remembered / inventory planned dose
-  if(!pepInv)return;
+  if(!pepInv){
+    sv('lg-dose-unit',SHOT_LOG_DEFAULT_DOSE_UNIT);
+    sv('lg-vol-unit','mL');
+    return;
+  }
   if(rememberedDose){
     sv('lg-dose',rememberedDose.dose);
     sv('lg-dose-unit',rememberedDose.doseUnit);
+  }else{
+    sv('lg-dose-unit',SHOT_LOG_DEFAULT_DOSE_UNIT);
   }
+  // Fresh peptide: always start volume in mL (not insulin units).
+  sv('lg-vol-unit','mL');
   if(pepInv.vialMg>0&&pepInv.reconBacMl>0&&pepInv.dose>0){
-    const doseMg=(pepInv.doseUnit==='mg')?pepInv.dose:pepInv.dose/1000;
+    const doseMg=(normalizeShotLogDoseUnit(pepInv.doseUnit)==='mg')?pepInv.dose:pepInv.dose/1000;
     const volMl=doseMg/(pepInv.vialMg/pepInv.reconBacMl);
-    const volUnit=gv('lg-vol-unit')||'mL';
-    const volOut=volUnit==='units'?Math.round(volMl*100):Math.round(volMl*1000)/1000;
-    sv('lg-vol',volOut);
+    sv('lg-vol',Math.round(volMl*1000)/1000);
   }
   if(!_lgSiteUserPicked)applyLgSiteDomValue(readLastInjectionSite());
 }
@@ -8308,7 +8322,7 @@ function maybeAutoFetchTracking(){
     if(!wasOn)c.classList.add('on');
   }));
   g('lg-btn').addEventListener('click',()=>{
-    const pep=gv('lg-pep'),dose=parseFloat(gv('lg-dose')),doseUnit=gv('lg-dose-unit')||'mcg',volRaw=gv('lg-vol'),vol=parseFloat(volRaw),volumeUnit=gv('lg-vol-unit')||'mL',time=gv('lg-time'),date=gv('lg-date'),notes=gv('lg-notes').trim();
+    const pep=gv('lg-pep'),dose=parseFloat(gv('lg-dose')),doseUnit=normalizeShotLogDoseUnit(gv('lg-dose-unit')),volRaw=gv('lg-vol'),vol=parseFloat(volRaw),volumeUnit=gv('lg-vol-unit')||'mL',time=gv('lg-time'),date=gv('lg-date'),notes=gv('lg-notes').trim();
     const resolvedInjectionSite=resolveInjectionSite();
     const site=resolvedInjectionSite;
     const m=g('lg-msg');
@@ -8443,6 +8457,7 @@ function maybeAutoFetchTracking(){
     try{if(typeof window.tmpBackupSnapshot==='function')window.tmpBackupSnapshot();}catch(_){}
     try{if(typeof window.tmpRequestBackupReminder==='function')window.tmpRequestBackupReminder('shot');}catch(_){}
     sv('lg-dose','');sv('lg-vol','');sv('lg-notes','');
+    try{sv('lg-vol-unit','mL');}catch(_){}
     if(loggedSite)stickLgInjectionSite(loggedSite);
     // v33.375-stable-vendor-post-import-review: floating toast — visible no matter where the user is scrolled.
     // Plus inline lg-msg as a backup in case the toast div is missing.
