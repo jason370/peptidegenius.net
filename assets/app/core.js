@@ -1439,9 +1439,47 @@ function runPeptideTrackerImport(text,clearFileInput){
   const importVialN=Array.isArray(clean.vials)?clean.vials.length:0;
   const importParts=[clean.inv.length+' peptides',((clean.shots||[]).length)+' shots'];
   if(importVialN)importParts.push(importVialN+' vial'+(importVialN===1?'':'s'));
+  let importSchedN=0;
+  try{
+    importSchedN=Object.keys(clean.sched||{}).filter(k=>{
+      const v=clean.sched[k];
+      return v===true||(v&&typeof v==='object');
+    }).length;
+  }catch(_){}
+  if(importSchedN)importParts.push(importSchedN+' calendar slots');
   if(!confirm('Import '+importParts.join(' + ')+'? This REPLACES your current data.')){clearIn();return;}
-  Object.keys(S).forEach(k=>delete S[k]);
-  Object.assign(S,clean);
+
+  // CRITICAL ORDER: calendar clear-lock installs an S.sched setter that prunes
+  // non-allowed names. If we Object.assign(sched) while the lock/guard is still
+  // active, the imported schedule is wiped to {} before we ever clear the lock.
+  try{window._tmpBypassCalEnforce=true;}catch(_){}
+  try{if(window.tmpCalClearGuard)tmpCalClearGuard.clear();}catch(_){}
+  try{
+    // Dismantle defineProperty/Proxy guard so assign writes a plain sched object.
+    delete S.__schedPropGuard;
+    delete S.__tmpSchedGuardWrapped;
+    const desc=Object.getOwnPropertyDescriptor(S,'sched');
+    if(desc&&(desc.get||desc.set)){
+      Object.defineProperty(S,'sched',{value:{},writable:true,configurable:true,enumerable:true});
+    }
+  }catch(_){}
+
+  // Prefer field restore over wipe-all-keys — deleting every key on S can leave
+  // a broken empty state when sched was previously a defineProperty accessor.
+  try{
+    Object.keys(clean).forEach(k=>{
+      if(k==='sched') return;
+      try{S[k]=clean[k];}catch(_){}
+    });
+  }catch(_){
+    try{Object.assign(S,clean);}catch(__){}
+  }
+  try{
+    const plainSched=Object.assign(Object.create(null), (clean.sched&&typeof clean.sched==='object')?clean.sched:{});
+    Object.defineProperty(S,'sched',{value:plainSched,writable:true,configurable:true,enumerable:true});
+  }catch(_){
+    S.sched=(clean.sched&&typeof clean.sched==='object')?Object.assign({},clean.sched):{};
+  }
   if(!S.sched||typeof S.sched!=='object')S.sched={};
   if(!S.tit||typeof S.tit!=='object')S.tit={};
   if(!Array.isArray(S.packages))S.packages=[];
@@ -1469,23 +1507,17 @@ function runPeptideTrackerImport(text,clearFileInput){
   S._supplies_seeded=true;
   S._mig=true;
   S._hadSaved=true;
-  // Full backup import must restore Weekly Calendar / Daily Stack. If the
-  // calendar clear-lock is active, save() pre-hooks prune S.sched down to an
-  // allow-list (usually empty after a fresh PG session) and the imported
-  // schedule never appears. Clear the lock and allow every imported peptide.
+  // If something re-marks the lock before save finishes, allow imported names.
   try{
-    if(window.tmpCalClearGuard){
+    if(window.tmpCalClearGuard&&tmpCalClearGuard.isActive()){
       const names=(S.inv||[]).map(i=>i&&i.name).filter(Boolean);
       Object.keys(S.sched||{}).forEach(k=>{
         const n=String(k||'').split('/')[0];
         if(n) names.push(n);
       });
-      tmpCalClearGuard.clear();
-      // If something re-marks the lock before save finishes, still allow names.
       names.forEach(n=>{try{tmpCalClearGuard.allowName(n);}catch(_){}});
     }
   }catch(_){}
-  try{window._tmpBypassCalEnforce=true;}catch(_){}
   // CRITICAL: saveNow() calls reconcileFromDisk() before writing. If the imported
   // backup has an older/missing _saveRev than what's already in localStorage,
   // reconcile would overwrite the import with the previous (often empty) state.
@@ -1499,8 +1531,31 @@ function runPeptideTrackerImport(text,clearFileInput){
   }catch(_){S._saveRev=(Number(S._saveRev)||0)+1;}
   try{
     saveNow(); // must be synchronous: the verify below reads localStorage right back
+    // If save hooks still stripped sched, force-write the imported schedule.
+    if(importSchedN>0){
+      let diskSchedN=0;
+      try{
+        const v=JSON.parse(localStorage.getItem('peptide_tracker')||'null');
+        diskSchedN=Object.keys((v&&v.sched)||{}).filter(k=>{
+          const x=v.sched[k];
+          return x===true||(x&&typeof x==='object');
+        }).length;
+      }catch(_){}
+      if(diskSchedN<importSchedN){
+        try{if(window.tmpCalClearGuard)tmpCalClearGuard.clear();}catch(_){}
+        try{
+          const plainSched=Object.assign(Object.create(null), clean.sched||{});
+          Object.defineProperty(S,'sched',{value:plainSched,writable:true,configurable:true,enumerable:true});
+        }catch(_){S.sched=Object.assign({},clean.sched||{});}
+        S._saveRev=(Number(S._saveRev)||0)+1;
+        try{localStorage.setItem('peptide_tracker',JSON.stringify(S));}catch(_){}
+      }
+    }
   }finally{
-    try{window._tmpBypassCalEnforce=false;}catch(_){}
+    // Keep bypass through first calendar paint, then release.
+    try{
+      setTimeout(function(){try{window._tmpBypassCalEnforce=false;}catch(_){}},400);
+    }catch(_){try{window._tmpBypassCalEnforce=false;}catch(__){}}
   }
   const verifyRaw=localStorage.getItem('peptide_tracker');
   let verified=false;
