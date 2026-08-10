@@ -21,6 +21,23 @@
 })();
 
 function __tmpVendorLogActive(){return !!document.getElementById('vpr-tbody');}
+// RX-NAME-TYPO-R1: single-character-typo tolerance (edit distance ≤1) for
+// normalized names ≥6 chars — e.g. "tadalifil" ↔ "tadalafil". Used alongside
+// the RX-NAME-PREFIX-R1 prefix match wherever calendar names are compared to
+// Rx med names. The ≥6 guard keeps short abbreviations ("fin"/"min") from
+// cross-matching each other.
+window.__pgRxNearMatch = function(a, b){
+  a = String(a == null ? '' : a); b = String(b == null ? '' : b);
+  if(a.length < 6 || b.length < 6) return false;
+  if(Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, edits = 0;
+  while(i < a.length && j < b.length){
+    if(a[i] === b[j]){ i++; j++; continue; }
+    if(++edits > 1) return false;
+    if(a.length > b.length) i++; else if(b.length > a.length) j++; else { i++; j++; }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+};
 // PERF-P2: single renderCal hook — core reference captured before any patch wraps it.
 window.__tmpRenderCalCore = window.renderCal;
 window.__tmpRenderCalPre = window.__tmpRenderCalPre || [];
@@ -379,11 +396,13 @@ window.__tmpPgDebounced=function(key,fn,ms){
       if(!n) return false;
       // RX-NAME-PREFIX-R1: exact OR ≥3-char prefix match in either direction
       // ("Fin" ↔ "Finasteride").
+      // RX-NAME-TYPO-R1: plus single-typo tolerance for names ≥6 chars
+      // ("Tadalifil" ↔ "Tadalafil").
       try {
         return ((window.S && S.rx) || []).some(r => {
           if(!r) return false;
           const rn = this.normName(r.name);
-          return !!rn && (rn === n || (rn.length >= 3 && n.length >= 3 && (rn.startsWith(n) || n.startsWith(rn))));
+          return !!rn && (rn === n || (rn.length >= 3 && n.length >= 3 && (rn.startsWith(n) || n.startsWith(rn))) || (window.__pgRxNearMatch && __pgRxNearMatch(rn, n)));
         });
       } catch(_){ return false; }
     },
@@ -14732,7 +14751,10 @@ function closeLogEdit(){
     if(!low)return false;
     // RX-NAME-PREFIX-R1: calendar names are often abbreviations of the Rx name
     // ("Fin" vs "Finasteride") — match exact OR prefix (≥3 chars) either way.
-    const m=(a)=>{a=String(a||'').trim().toLowerCase();return !!a&&(a===low||(a.length>=3&&low.length>=3&&(a.startsWith(low)||low.startsWith(a))));};
+    // RX-NAME-TYPO-R1: plus single-typo tolerance for names ≥6 chars
+    // ("Tadalifil" vs "Tadalafil") — without it this exemption misses the
+    // misspelled calendar item and the zero-stock sweep wipes it.
+    const m=(a)=>{a=String(a||'').trim().toLowerCase();return !!a&&(a===low||(a.length>=3&&low.length>=3&&(a.startsWith(low)||low.startsWith(a)))||(window.__pgRxNearMatch&&__pgRxNearMatch(a,low)));};
     try{ if((S.rx||[]).some(r=>r&&m(r.name))) return true; }catch(_){}
     const inv=activeInvByName(name);
     if(inv&&(inv.isPeptide===false||String(inv.doseUnit||'').toLowerCase()==='pill')) return true;

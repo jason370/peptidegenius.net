@@ -2520,8 +2520,23 @@ function renderCal(opts){
   // taken. RX-NAME-PREFIX-R1: calendar names are often abbreviations of the Rx
   // name ("Fin" vs "Finasteride", "Min" vs "Minoxidil"), so match exact OR
   // prefix (≥3 chars) in either direction.
+  // RX-NAME-TYPO-R1: also tolerate a single-character typo (edit distance ≤1)
+  // for names ≥6 chars — e.g. a calendar cell saved as "Tadalifil" still
+  // matches the Rx med "Tadalafil", so the Taken-today 💊 marker renders.
+  // The ≥6 guard keeps short abbreviations ("Fin"/"Min") from cross-matching.
   const _rxNorm=s=>String(s==null?'':s).trim().toLowerCase();
-  const _rxNameMatch=(a,b)=>a===b||(a.length>=3&&b.length>=3&&(a.startsWith(b)||b.startsWith(a)));
+  const _rxNearMatch=(a,b)=>{
+    if(a.length<6||b.length<6)return false;
+    if(Math.abs(a.length-b.length)>1)return false;
+    let i=0,j=0,edits=0;
+    while(i<a.length&&j<b.length){
+      if(a[i]===b[j]){i++;j++;continue;}
+      if(++edits>1)return false;
+      if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++;}
+    }
+    return edits+(a.length-i)+(b.length-j)<=1;
+  };
+  const _rxNameMatch=(a,b)=>a===b||(a.length>=3&&b.length>=3&&(a.startsWith(b)||b.startsWith(a)))||_rxNearMatch(a,b);
   const weekRxTakenByDate=new Map();
   (S.rxLog||[]).forEach(e=>{
     if(!e||!e.date||!e.name) return;
@@ -8156,7 +8171,13 @@ function maybeAutoFetchTracking(){
     if(pg!=='stack'){stackHighlight=null;applyStackHighlight();}
     if(opts.render!==false) (RENDERS[pg]||function(){})();
     if(pg==='vitals'&&window.renderVitals)window.renderVitals();if(pg==='stack'&&window.renderVitalsSummary)window.renderVitalsSummary();
-    if(pg==='log'){const _fd=readFocusDate();if(_fd)applyFocusDateToForms(_fd);}
+    if(pg==='log'){
+      // LG-CLOCK-STALE-R1: arriving on the Shot Log defaults the time field to
+      // the actual current time (unless the user set it themselves) — the old
+      // behavior kept whatever time the page happened to load at.
+      try{if(typeof window._refreshLgClockToNow==='function')window._refreshLgClockToNow(false);}catch(_){}
+      const _fd=readFocusDate();if(_fd)applyFocusDateToForms(_fd);
+    }
     if(opts.save!==false) rememberCurrentPage(pg);
   }
   window.__tmpActivatePage=activatePage;
@@ -8343,6 +8364,9 @@ function maybeAutoFetchTracking(){
     const sevBtn=document.querySelector('#lg-severity .sev-chip.on');
     if(sevBtn)shot.severity=parseInt(sevBtn.dataset.sev);
     S.shots.push(shot);
+    // LG-CLOCK-STALE-R1: shot logged — re-arm the clock auto-refresh so the
+    // next visit to the form defaults to the then-current time.
+    window._lgTimeUserSet = false;
     // Remember this dose on the inventory peptide so calculator "Load from inventory" auto-fills it next time.
     try{ rememberPepDose(pep, dose, doseUnit, (typeof gv==='function'&&g('calc-freq')?gv('calc-freq'):null)); }catch(_){}
     const loggedSite=shot.site;
@@ -8569,23 +8593,44 @@ function maybeAutoFetchTracking(){
     }
     clock.addEventListener('change', syncFromClock);
     clock.addEventListener('input', syncFromClock);
+    // LG-CLOCK-STALE-R1: the clock was set once at page load and never
+    // refreshed, so a tab/PWA left open overnight kept showing last night's
+    // time (e.g. "9:10 PM" at 5:35 AM). Track whether the USER edited the
+    // field (isTrusted distinguishes real input from our synthetic change
+    // events); auto-refresh to "now" only when they haven't.
+    function markUserSet(e){ if(e && e.isTrusted) window._lgTimeUserSet = true; }
+    clock.addEventListener('change', markUserSet);
+    clock.addEventListener('input', markUserSet);
     function setTime(hhmm){
       clock.value = hhmm;
       syncFromClock();
       try { clock.dispatchEvent(new Event('change', {bubbles:true})); } catch(_){}
     }
+    function refreshToNow(force){
+      if(!force && window._lgTimeUserSet) return;
+      var n = new Date();
+      setTime(pad(n.getHours())+':'+pad(n.getMinutes()));
+      window._lgTimeUserSet = false;
+    }
+    window._refreshLgClockToNow = refreshToNow;
     var nowBtn = g('lg-time-now');
     if(nowBtn){
       nowBtn.addEventListener('click', function(){
-        var n = new Date();
-        setTime(pad(n.getHours())+':'+pad(n.getMinutes()));
+        refreshToNow(true); // explicit "Now" click re-arms auto-refresh
       });
     }
     // Initialize to current clock time so the field never shows blank
     if(!clock.value){
-      var n0 = new Date();
-      setTime(pad(n0.getHours())+':'+pad(n0.getMinutes()));
+      refreshToNow(true);
     }
+    // LG-CLOCK-STALE-R1: when the tab comes back to the foreground while the
+    // Shot Log page is showing (phone unlocked in the morning, PWA resumed),
+    // pull the clock forward to the real current time.
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState !== 'visible') return;
+      var lp = g('pg-log');
+      if(lp && lp.style.display !== 'none') refreshToNow(false);
+    });
     window._setLgTime = setTime;
   })();
   /* v33.375-stable-vendor-post-import-review+v33.375-stable-vendor-post-import-review: live "Logging for: …" preview using calendar-day diff
@@ -8691,6 +8736,9 @@ function maybeAutoFetchTracking(){
               if(Math.abs(hh - nowHr) <= 4){
                 if(typeof window._setLgTime === 'function'){ window._setLgTime('22:00'); }
                 else { clockEl.value = '22:00'; if(legacyTime) legacyTime.value = 'pm'; }
+                // LG-CLOCK-STALE-R1: the 22:00 back-date nudge is deliberate —
+                // protect it from the page-activation auto-refresh-to-now.
+                window._lgTimeUserSet = true;
               }
             }
           }
