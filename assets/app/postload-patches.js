@@ -16860,3 +16860,401 @@ __tmpInstallUnifiedRenderCalHook();
   else wire();
   setTimeout(wire, 800);
 })();
+
+// ── TMP Analytics module (added 20260818) ────────────────────────────────────
+// Read-only analytics view over S.shots. Sort/filter/aggregate across time
+// windows. Renders into the .tmp-analytics-card block in the Log Shot page.
+// Uses Chart.js (already loaded for peptide history modal).
+(function TmpAnalytics(){
+  'use strict';
+  if (window.__tmpAnalyticsBooted) return;
+  window.__tmpAnalyticsBooted = true;
+
+  var state = {
+    rangeKey: '30',
+    customFrom: null,
+    customTo: null,
+    search: '',
+    sort: 'doses-desc',
+    open: Object.create(null),
+    chart: null
+  };
+
+  function $ (id) { return document.getElementById(id); }
+  function root(){ return document.querySelector('.tmp-analytics-card'); }
+
+  function pad(n){ return String(n).padStart(2, '0'); }
+  function isoOf(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function todayISO(){ return isoOf(new Date()); }
+  function isoDaysAgo(n){ var d = new Date(); d.setDate(d.getDate() - n); return isoOf(d); }
+  function firstOfMonthISO(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-01'; }
+  function firstOfYearISO(){ return new Date().getFullYear() + '-01-01'; }
+
+  // Normalize dose+unit into mg. Ignores pill, iu, ml, unknown.
+  function doseInMg(dose, unit){
+    var n = +dose;
+    if (!isFinite(n) || n <= 0) return 0;
+    var u = String(unit || 'mg').toLowerCase();
+    if (u === 'mg') return n;
+    if (u === 'mcg' || u === 'ug' || u === 'μg') return n / 1000;
+    if (u === 'g')  return n * 1000;
+    return 0;
+  }
+
+  function activeRange(){
+    var key = state.rangeKey;
+    var today = todayISO();
+    if (key === 'today') return { from: today, to: today, label: 'Today (' + today + ')' };
+    if (key === '7')     return { from: isoDaysAgo(6),  to: today, label: 'Last 7 days' };
+    if (key === '30')    return { from: isoDaysAgo(29), to: today, label: 'Last 30 days' };
+    if (key === '90')    return { from: isoDaysAgo(89), to: today, label: 'Last 90 days' };
+    if (key === 'mtd')   return { from: firstOfMonthISO(), to: today, label: 'This month' };
+    if (key === 'ytd')   return { from: firstOfYearISO(),  to: today, label: 'This year' };
+    if (key === 'all')   return { from: null, to: null, label: 'All time' };
+    if (key === 'custom'){
+      var f = state.customFrom, t = state.customTo;
+      if (!f || !t) return { from: null, to: null, label: 'Custom range — pick From and To dates' };
+      if (f > t) { var tmp = f; f = t; t = tmp; }
+      return { from: f, to: t, label: 'Custom: ' + f + ' → ' + t };
+    }
+    return { from: isoDaysAgo(29), to: today, label: 'Last 30 days' };
+  }
+
+  function shotsInRange(range){
+    var shots = (window.S && Array.isArray(window.S.shots)) ? window.S.shots : [];
+    return shots.filter(function(s){
+      if (!s || !s.date) return false;
+      if (range.from && s.date < range.from) return false;
+      if (range.to   && s.date > range.to)   return false;
+      return true;
+    });
+  }
+
+  function daysInRange(range){
+    if (range.from && range.to){
+      var a = new Date(range.from + 'T00:00:00');
+      var b = new Date(range.to   + 'T00:00:00');
+      return Math.max(1, Math.round((b - a) / 86400000) + 1);
+    }
+    return null;
+  }
+
+  function aggregate(shots, range){
+    var totalDoses = shots.length;
+    var totalMg = 0;
+    var byPep = Object.create(null);
+    var byDay = Object.create(null);
+    shots.forEach(function(s){
+      var mg = doseInMg(s.dose, s.doseUnit);
+      totalMg += mg;
+      var name = (s.peptide || '(unnamed)').trim() || '(unnamed)';
+      var p = byPep[name] || (byPep[name] = {
+        name: name, doses: 0, mg: 0,
+        firstDate: s.date, lastDate: s.date,
+        pillCount: 0, entries: []
+      });
+      p.doses++;
+      p.mg += mg;
+      if (s.date < p.firstDate) p.firstDate = s.date;
+      if (s.date > p.lastDate)  p.lastDate  = s.date;
+      if (String(s.doseUnit||'').toLowerCase() === 'pill') p.pillCount++;
+      p.entries.push(s);
+      byDay[s.date] = (byDay[s.date] || 0) + 1;
+    });
+    var pepList = Object.keys(byPep).map(function(k){ return byPep[k]; });
+    var most = null;
+    pepList.forEach(function(p){ if (!most || p.doses > most.doses) most = p; });
+
+    var series = [];
+    if (range.from && range.to){
+      var cur = new Date(range.from + 'T00:00:00');
+      var end = new Date(range.to   + 'T00:00:00');
+      while (cur <= end){
+        var iso = isoOf(cur);
+        series.push({ date: iso, count: byDay[iso] || 0 });
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else {
+      Object.keys(byDay).sort().forEach(function(iso){
+        series.push({ date: iso, count: byDay[iso] });
+      });
+    }
+
+    return {
+      totalDoses: totalDoses,
+      totalMg: totalMg,
+      uniquePeptides: pepList.length,
+      most: most,
+      byPep: pepList,
+      series: series
+    };
+  }
+
+  function fmtMg(mg){
+    if (!isFinite(mg) || mg <= 0) return '0';
+    if (mg < 0.01) return (mg*1000).toFixed(1) + ' mcg';
+    if (mg < 1)    return mg.toFixed(3) + ' mg';
+    if (mg < 10)   return mg.toFixed(2) + ' mg';
+    if (mg < 100)  return mg.toFixed(1) + ' mg';
+    return Math.round(mg) + ' mg';
+  }
+  function fmtMgPlain(mg){
+    if (!isFinite(mg) || mg <= 0) return '0';
+    if (mg < 1) return mg.toFixed(3);
+    if (mg < 10) return mg.toFixed(2);
+    if (mg < 100) return mg.toFixed(1);
+    return String(Math.round(mg));
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;';
+    });
+  }
+
+  function kpi(label, value, sub){
+    return '<div class="tmp-anly-kpi"><div class="tmp-anly-kpi-label">' + esc(label) + '</div>'
+      + '<div class="tmp-anly-kpi-value">' + esc(value) + '</div>'
+      + (sub ? '<div class="tmp-anly-kpi-sub">' + esc(sub) + '</div>' : '')
+      + '</div>';
+  }
+
+  function renderKpis(agg, range){
+    var el = $('tmp-anly-kpis'); if (!el) return;
+    var days = daysInRange(range) || Math.max(1, agg.series.length);
+    var perDay = agg.totalDoses / days;
+    var mostTxt = agg.most ? (agg.most.name + ' · ' + agg.most.doses + ' doses') : '—';
+    el.innerHTML = ''
+      + kpi('Total doses', String(agg.totalDoses))
+      + kpi('Total (mg)', fmtMg(agg.totalMg), 'excludes pills / iu / ml')
+      + kpi('Unique peptides', String(agg.uniquePeptides))
+      + kpi('Avg / day', perDay < 1 ? perDay.toFixed(2) : perDay.toFixed(1))
+      + kpi('Most frequent', mostTxt);
+  }
+
+  function renderRangeLabel(range){
+    var el = $('tmp-anly-range-label');
+    if (el) el.textContent = range.label;
+  }
+
+  function sortPeps(list){
+    var s = state.sort;
+    var arr = list.slice();
+    arr.sort(function(a,b){
+      switch(s){
+        case 'doses-desc': return b.doses - a.doses || a.name.localeCompare(b.name);
+        case 'doses-asc':  return a.doses - b.doses || a.name.localeCompare(b.name);
+        case 'mg-desc':    return b.mg - a.mg || a.name.localeCompare(b.name);
+        case 'mg-asc':     return a.mg - b.mg || a.name.localeCompare(b.name);
+        case 'name-desc':  return b.name.localeCompare(a.name);
+        case 'recent':     return (b.lastDate||'').localeCompare(a.lastDate||'') || a.name.localeCompare(b.name);
+        case 'oldest':     return (a.firstDate||'').localeCompare(b.firstDate||'') || a.name.localeCompare(b.name);
+        case 'name-asc':
+        default:           return a.name.localeCompare(b.name);
+      }
+    });
+    return arr;
+  }
+
+  function renderDetail(p){
+    var rows = p.entries.slice();
+    rows.sort(function(a,b){
+      return (b.date||'').localeCompare(a.date||'') || (b.time||'').localeCompare(a.time||'');
+    });
+    var body = '';
+    rows.forEach(function(s){
+      body += '<tr>'
+        + '<td>' + esc(s.date || '—') + '</td>'
+        + '<td>' + esc(String(s.time||'').toUpperCase()) + '</td>'
+        + '<td class="num">' + esc(+s.dose||0) + ' ' + esc(s.doseUnit || '') + '</td>'
+        + '<td class="num">' + esc(+s.volume||0) + ' ' + esc(s.volumeUnit || '') + '</td>'
+        + '<td>' + esc(s.site || '—') + '</td>'
+        + '</tr>';
+    });
+    return '<table class="tmp-anly-detail-table">'
+      + '<thead><tr><th>Date</th><th>Time</th><th class="num">Dose</th><th class="num">Volume</th><th>Site</th></tr></thead>'
+      + '<tbody>' + body + '</tbody></table>';
+  }
+
+  function renderTable(agg){
+    var tbody = $('tmp-anly-tbody'); if (!tbody) return;
+    var q = (state.search || '').trim().toLowerCase();
+    var list = agg.byPep.filter(function(p){ return !q || p.name.toLowerCase().indexOf(q) !== -1; });
+    list = sortPeps(list);
+    var empty = $('tmp-anly-empty');
+    if (empty) empty.hidden = list.length > 0;
+    if (!list.length) { tbody.innerHTML = ''; return; }
+
+    var html = '';
+    list.forEach(function(p){
+      var avgMg = p.doses ? (p.mg / p.doses) : 0;
+      var isOpen = !!state.open[p.name];
+      html += '<tr class="tmp-anly-row' + (isOpen ? ' is-open' : '') + '" data-anly-pep="' + esc(p.name) + '">'
+        + '<td><span class="tmp-anly-caret">▶</span></td>'
+        + '<td><strong>' + esc(p.name) + '</strong>'
+        + (p.pillCount ? ' <span style="font-size:9.5px;color:#4338CA;opacity:.7">(' + p.pillCount + ' pill)</span>' : '')
+        + '</td>'
+        + '<td class="num">' + p.doses + '</td>'
+        + '<td class="num">' + fmtMgPlain(p.mg) + '</td>'
+        + '<td class="num">' + fmtMgPlain(avgMg) + '</td>'
+        + '<td>' + esc(p.firstDate || '—') + '</td>'
+        + '<td>' + esc(p.lastDate || '—') + '</td>'
+        + '</tr>';
+      if (isOpen){
+        html += '<tr class="tmp-anly-detail-row"><td colspan="7">' + renderDetail(p) + '</td></tr>';
+      }
+    });
+    tbody.innerHTML = html;
+
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr.tmp-anly-row'), function(tr){
+      tr.addEventListener('click', function(){
+        var pep = tr.getAttribute('data-anly-pep');
+        state.open[pep] = !state.open[pep];
+        renderTable(agg);
+      });
+    });
+  }
+
+  function renderChart(agg){
+    var canvas = $('tmp-anly-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+    var emptyEl = $('tmp-anly-chart-empty');
+
+    if (!agg.series.length || agg.totalDoses === 0){
+      if (state.chart){ state.chart.destroy(); state.chart = null; }
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    var labels = agg.series.map(function(d){ return d.date.slice(5); });
+    var data   = agg.series.map(function(d){ return d.count; });
+    var full   = agg.series.map(function(d){ return d.date; });
+
+    if (state.chart){
+      state.chart.data.labels = labels;
+      state.chart.data.datasets[0].data = data;
+      state.chart.__fullDates = full;
+      state.chart.update();
+      return;
+    }
+    state.chart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{
+        label: 'Doses',
+        data: data,
+        backgroundColor: 'rgba(99,102,241,.75)',
+        borderColor: '#4338CA',
+        borderWidth: 1,
+        borderRadius: 3
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: {
+            title: function(items){
+              var idx = items && items[0] ? items[0].dataIndex : -1;
+              var arr = state.chart && state.chart.__fullDates;
+              return (arr && arr[idx]) ? arr[idx] : '';
+            }
+          }}
+        },
+        scales: {
+          x: { grid: { display:false }, ticks: { font: { size: 10 }, autoSkip: true, maxTicksLimit: 12 } },
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } }
+        }
+      }
+    });
+    state.chart.__fullDates = full;
+  }
+
+  function renderAll(){
+    var r = activeRange();
+    var s = shotsInRange(r);
+    var agg = aggregate(s, r);
+    renderRangeLabel(r);
+    renderKpis(agg, r);
+    renderTable(agg);
+    renderChart(agg);
+  }
+
+  function bindEvents(){
+    var host = root(); if (!host) return;
+
+    Array.prototype.forEach.call(host.querySelectorAll('.tmp-anly-range'), function(btn){
+      btn.addEventListener('click', function(){
+        state.rangeKey = btn.getAttribute('data-anly-range');
+        Array.prototype.forEach.call(host.querySelectorAll('.tmp-anly-range'), function(b){
+          b.classList.toggle('is-active', b === btn);
+        });
+        var custom = $('tmp-anly-custom');
+        if (custom) custom.hidden = (state.rangeKey !== 'custom');
+        renderAll();
+      });
+    });
+
+    var applyBtn = $('tmp-anly-apply');
+    if (applyBtn){
+      applyBtn.addEventListener('click', function(){
+        var f = $('tmp-anly-from'), t = $('tmp-anly-to');
+        state.customFrom = (f && f.value) || null;
+        state.customTo   = (t && t.value) || null;
+        state.rangeKey   = 'custom';
+        renderAll();
+      });
+    }
+
+    var search = $('tmp-anly-search');
+    if (search){
+      var t = null;
+      search.addEventListener('input', function(){
+        clearTimeout(t);
+        t = setTimeout(function(){
+          state.search = search.value || '';
+          renderAll();
+        }, 120);
+      });
+    }
+    var sort = $('tmp-anly-sort');
+    if (sort){
+      sort.addEventListener('change', function(){
+        state.sort = sort.value;
+        renderAll();
+      });
+    }
+  }
+
+  function boot(){
+    if (!root()) return;
+    bindEvents();
+    renderAll();
+
+    if (typeof window.save === 'function' && !window.save.__tmpAnlyWrapped){
+      var orig = window.save;
+      window.save = function(){
+        var r = orig.apply(this, arguments);
+        try { renderAll(); } catch (_) {}
+        return r;
+      };
+      window.save.__tmpAnlyWrapped = true;
+    }
+    var lastSig = '';
+    setInterval(function(){
+      if (document.visibilityState === 'hidden') return;
+      if (!root()) return;
+      var log = document.getElementById('pg-log');
+      if (log && log.style.display === 'none') return;
+      var shots = (window.S && Array.isArray(window.S.shots)) ? window.S.shots : [];
+      var last = shots[shots.length-1];
+      var sig = shots.length + '|' + (last ? (last.id + '|' + last.date + '|' + last.dose) : '');
+      if (sig !== lastSig){ lastSig = sig; renderAll(); }
+    }, 2500);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
