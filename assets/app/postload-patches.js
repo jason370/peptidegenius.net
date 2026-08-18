@@ -17170,6 +17170,8 @@ __tmpInstallUnifiedRenderCalHook();
   }
 
   function renderAll(){
+    var body = $('tmp-anly-body');
+    if (body && body.hidden) return;
     var r = activeRange();
     var s = shotsInRange(r);
     var agg = aggregate(s, r);
@@ -17181,6 +17183,28 @@ __tmpInstallUnifiedRenderCalHook();
 
   function bindEvents(){
     var host = root(); if (!host) return;
+
+    var collapseBtn = $('tmp-anly-collapse');
+    var bodyEl = $('tmp-anly-body');
+    function applyCollapsed(c){
+      if (bodyEl) bodyEl.hidden = c;
+      if (collapseBtn){
+        collapseBtn.setAttribute('aria-expanded', c ? 'false' : 'true');
+        var caret = collapseBtn.querySelector('.tmp-anly-collapse-caret');
+        if (caret) caret.style.transform = c ? '' : 'rotate(90deg)';
+      }
+    }
+    if (collapseBtn && bodyEl){
+      var saved = '1';
+      try { saved = localStorage.getItem('tmp.anlyCollapsed') || '1'; } catch(_){}
+      applyCollapsed(saved === '1');
+      collapseBtn.addEventListener('click', function(){
+        var nowCollapsed = !bodyEl.hidden;
+        applyCollapsed(nowCollapsed);
+        try { localStorage.setItem('tmp.anlyCollapsed', nowCollapsed ? '1' : '0'); } catch(_){}
+        if (!nowCollapsed) renderAll();
+      });
+    }
 
     Array.prototype.forEach.call(host.querySelectorAll('.tmp-anly-range'), function(btn){
       btn.addEventListener('click', function(){
@@ -17243,8 +17267,8 @@ __tmpInstallUnifiedRenderCalHook();
     setInterval(function(){
       if (document.visibilityState === 'hidden') return;
       if (!root()) return;
-      var log = document.getElementById('pg-log');
-      if (log && log.style.display === 'none') return;
+      var pg = document.getElementById('pg-stack');
+      if (pg && pg.style.display === 'none') return;
       var shots = (window.S && Array.isArray(window.S.shots)) ? window.S.shots : [];
       var last = shots[shots.length-1];
       var sig = shots.length + '|' + (last ? (last.id + '|' + last.date + '|' + last.dose) : '');

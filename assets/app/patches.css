@@ -8380,3 +8380,8 @@ input[type="range"]{accent-color:#0EA5A4}
 .tmp-anly-empty{font-size:11.5px;color:#6B7280;font-style:italic;padding:14px}
 .tmp-anly-footnote{font-size:10px;color:#6366F1;opacity:.75;margin-top:8px;text-align:center;font-style:italic}
 .tmp-anly-footnote code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.65);padding:1px 5px;border-radius:4px}
+/* collapsible toggle (Daily Stack placement, 20260818b) */
+.tmp-anly-collapse-toggle{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
+.tmp-anly-collapse-toggle h3{margin:0;font-size:14px;font-weight:700;color:#3730A3;text-transform:uppercase;letter-spacing:.06em}
+.tmp-anly-collapse-caret{display:inline-block;color:#6366F1;font-weight:700;font-size:12px;transition:transform .15s ease}
+#tmp-anly-body{margin-top:10px}

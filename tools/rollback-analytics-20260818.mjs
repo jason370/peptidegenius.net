@@ -67,11 +67,11 @@ function report(file, what, did) {
   }
 
   // Revert cache-bust versions
-  const cssRev = html.replace('assets/app/patches.css?v=20260818-analytics', 'assets/app/patches.css?v=20260724-backup-remind');
+  const cssRev = html.replace('assets/app/patches.css?v=20260818-analytics2', 'assets/app/patches.css?v=20260724-backup-remind');
   report('index.html', 'patches.css version bump', cssRev !== html);
   html = cssRev;
 
-  const jsRev = html.replace('assets/app/postload-patches.js?v=20260818-analytics', 'assets/app/postload-patches.js?v=20260809-rx-typo-match');
+  const jsRev = html.replace('assets/app/postload-patches.js?v=20260818-analytics2', 'assets/app/postload-patches.js?v=20260809-rx-typo-match');
   report('index.html', 'postload-patches.js version bump', jsRev !== html);
   html = jsRev;
 
