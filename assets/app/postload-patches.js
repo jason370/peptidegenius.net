@@ -16861,6 +16861,93 @@ __tmpInstallUnifiedRenderCalHook();
   setTimeout(wire, 800);
 })();
 
+
+// ── TMP AM/PM additive scheduling (added 20260818) ───────────────────────────
+// Adds a "keep existing time slots" checkbox to the Set-schedule modal so the
+// same peptide can live in multiple weekly-calendar time slots (e.g. Breakfast
+// AM + Bedtime PM). Core's pia-add handler wipes every key for the item before
+// writing the new lane; this module snapshots the schedule in capture phase and
+// merges it back after core finishes, pinning each side to its own meal lane
+// via lane-scoped sched keys (which calBucketFor checks first).
+(function TmpAmPmAdditive(){
+  'use strict';
+  if (window.__tmpAmPmAdditiveBooted) return;
+  window.__tmpAmPmAdditiveBooted = true;
+  var LANES = ['breakfast','lunch','dinner','bedtime'];
+  function $(id){ return document.getElementById(id); }
+  function laneSide(l){
+    l = String(l||'').toLowerCase();
+    if (l==='breakfast'||l==='lunch') return 'am';
+    if (l==='dinner'||l==='bedtime') return 'pm';
+    return null;
+  }
+  function skk(n,t,di){ return n + '/' + t + '/' + di; }
+
+  function injectUI(){
+    var addBtn = $('pia-add');
+    if (!addBtn || $('pia-additive-row')) return;
+    var row = document.createElement('label');
+    row.id = 'pia-additive-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:7px;margin:.6rem 0 0;font-size:12px;font-weight:600;color:#3730A3;cursor:pointer;user-select:none';
+    row.innerHTML = '<input type="checkbox" id="pia-additive" style="width:15px;height:15px;accent-color:#4338CA;flex-shrink:0"> \u2795 Add to existing schedule \u2014 keep this peptide\u2019s other time slots (lets you run AM + PM)';
+    var msg = $('pia-msg');
+    if (msg && msg.parentNode) msg.parentNode.insertBefore(row, msg);
+  }
+
+  document.addEventListener('click', function(e){
+    var t = e.target && e.target.closest && e.target.closest('#pia-add');
+    if (!t) return;
+    var cb = $('pia-additive');
+    if (!cb || !cb.checked) return;
+    if (!window.S || !S.sched) return;
+    var sel = $('pia-sel');
+    var it = (S.inv||[]).find(function(i){ return i && i.id === parseInt(sel && sel.value, 10); });
+    if (!it) return;
+    var name = it.name;
+    var snap = {};
+    Object.keys(S.sched).forEach(function(k){
+      if (k.indexOf(name + '/') === 0 && S.sched[k]) snap[k] = S.sched[k];
+    });
+    var prevLane = String(it.stackLane||'').toLowerCase();
+    var newLane = String((($('pia-stk')||{}).value)||'').toLowerCase();
+
+    setTimeout(function(){
+      try {
+        var msg = $('pia-msg');
+        if (!msg || msg.textContent.indexOf('saved') === -1) return; // core validation failed - nothing wiped
+        // merge the snapshot back (restore wiped keys without clobbering new ones)
+        Object.keys(snap).forEach(function(k){
+          if (!S.sched[k]) S.sched[k] = snap[k];
+        });
+        // pin each side to its own meal lane via lane-scoped keys
+        for (var di = 0; di < 7; di++){
+          if (snap[skk(name,'am',di)]){
+            var la = (laneSide(prevLane)==='am') ? prevLane : null;
+            if (!la) la = LANES.filter(function(l){ return laneSide(l)==='am' && snap[skk(name,l,di)]; })[0] || 'breakfast';
+            S.sched[skk(name,la,di)] = true;
+          }
+          if (snap[skk(name,'pm',di)]){
+            var lp = (laneSide(prevLane)==='pm') ? prevLane : null;
+            if (!lp) lp = LANES.filter(function(l){ return laneSide(l)==='pm' && snap[skk(name,l,di)]; })[0] || 'dinner';
+            S.sched[skk(name,lp,di)] = true;
+          }
+          var ns = laneSide(newLane);
+          if (ns && S.sched[skk(name,ns,di)] && LANES.indexOf(newLane) >= 0) S.sched[skk(name,newLane,di)] = true;
+        }
+        if (typeof window.save === 'function') save();
+        try { window.renderCal && renderCal(); } catch(_){}
+        try { window.tmpInventoryToast && tmpInventoryToast('\u2713 Added \u2014 "' + name + '" now has multiple time slots'); } catch(_){}
+      } catch(_){}
+    }, 0);
+  }, true);
+
+  function boot(){
+    injectUI();
+    setInterval(function(){ if (document.visibilityState !== 'hidden') injectUI(); }, 3000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+
 // ── TMP Analytics module (added 20260818) ────────────────────────────────────
 // Read-only analytics view over S.shots. Sort/filter/aggregate across time
 // windows. Renders into the .tmp-analytics-card block in the Log Shot page.
