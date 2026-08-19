@@ -3386,6 +3386,15 @@ window.__tmpPgDebounced=function(key,fn,ms){
 
   function requestBackupReminder(reason){
     _pendingReason = COPY[reason] ? reason : 'change';
+    // 20260819: shot-triggered reminders only every 5th logged shot -
+    // prompting on every single shot was too naggy.
+    if (_pendingReason === 'shot'){
+      var _sc = 0;
+      try { _sc = parseInt(localStorage.getItem('tmp.backupShotCount')||'0',10)||0; } catch(_){}
+      _sc++;
+      try { localStorage.setItem('tmp.backupShotCount', String(_sc)); } catch(_){}
+      if (_sc % 5 !== 0) return;
+    }
     if (_debounceTimer) clearTimeout(_debounceTimer);
     const delay = (_pendingReason === 'shot') ? 4200 : 1400;
     _debounceTimer = setTimeout(function(){

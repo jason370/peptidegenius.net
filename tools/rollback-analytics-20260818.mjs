@@ -71,7 +71,7 @@ function report(file, what, did) {
   report('index.html', 'patches.css version bump', cssRev !== html);
   html = cssRev;
 
-  const jsRev = html.replace('assets/app/postload-patches.js?v=20260818-iu', 'assets/app/postload-patches.js?v=20260809-rx-typo-match');
+  const jsRev = html.replace('assets/app/postload-patches.js?v=20260819-backup5', 'assets/app/postload-patches.js?v=20260809-rx-typo-match');
   report('index.html', 'postload-patches.js version bump', jsRev !== html);
   html = jsRev;
 
