@@ -829,6 +829,23 @@ function blendsUsing(peptideName){
 // Returns null when we can't compute (missing vial/BAC/dose, or pill format).
 // Rounds to 1 decimal below 10u (precision matters for small doses like 4.5u)
 // and whole numbers at 10u+ (no one draws up 17.3u from an insulin syringe).
+
+// TMP-IU: resolve how many IU equal 1 mg for a peptide. Priority: explicit
+// item.iuPerMg override, then well-known substances (somatropin/HGH standard
+// is 3 IU = 1 mg). Returns 0 when unknown - callers must skip mg conversion.
+function tmpIuPerMgFor(itemOrName){
+  try{
+    var it = (typeof itemOrName === 'string')
+      ? (S.inv||[]).find(function(i){ return i && i.name === itemOrName; })
+      : itemOrName;
+    if (it && +it.iuPerMg > 0) return +it.iuPerMg;
+    var nm = String((it && it.name) || (typeof itemOrName === 'string' ? itemOrName : '') || '').toLowerCase();
+    if (/hgh|somatropin|growth\s*hormone|genotropin|norditropin|omnitrope|humatrope/.test(nm)) return 3;
+  }catch(_){ }
+  return 0;
+}
+window.tmpIuPerMgFor = tmpIuPerMgFor;
+
 function computeUnitsFromMg(doseMg,vialMg,reconBacMl){
   if(!doseMg||!vialMg||!reconBacMl)return null;
   const units=doseMg*100*reconBacMl/vialMg;
@@ -850,7 +867,7 @@ function schedUnits(name){
     const u=(+inv.dose||0)*100;
     return u?(u<10?Math.round(u*10)/10:Math.round(u)):null;
   }
-  const doseMg=du==='mg'?(+inv.dose||0):(+inv.dose||0)/1000;
+  const doseMg=(du==='mg'||du==='iu')?(+inv.dose||0):(+inv.dose||0)/1000;
   return computeUnitsFromMg(doseMg,+inv.vialMg||0,+inv.reconBacMl||0);
 }
 // RC-5: Per-occurrence dose helpers.
@@ -860,7 +877,7 @@ function schedUnits(name){
 // All boolean checks on S.sched[key] remain correct because both forms are truthy.
 function _doseToMcgNum(dose,unit){
   const d=+dose||0; if(!d) return 0;
-  return (unit||'mcg')==='mg'?d*1000:d;
+  const _u=(unit||'mcg');return (_u==='mg'||_u==='iu')?d*1000:d;
 }
 function _schedDoseLooksStale(name,time,di,cellVal){
   if(!cellVal||typeof cellVal!=='object') return false;
@@ -938,7 +955,7 @@ function schedUnitsForCell(name,time,di){
   if(du==='pill')return null;
   if(du==='units'){const u=+occ.dose||0;return u?(u<10?Math.round(u*10)/10:Math.round(u)):null;}
   if(du==='mL'){const u=(+occ.dose||0)*100;return u?(u<10?Math.round(u*10)/10:Math.round(u)):null;}
-  const doseMg=du==='mg'?(+occ.dose||0):(+occ.dose||0)/1000;
+  const doseMg=(du==='mg'||du==='iu')?(+occ.dose||0):(+occ.dose||0)/1000;
   return computeUnitsFromMg(doseMg,+inv.vialMg||0,+inv.reconBacMl||0);
 }
 // For a LOGGED shot — prefers the stored volume directly (what was ACTUALLY
@@ -958,7 +975,7 @@ function shotUnits(shot){
   if(!inv)return null;
   const du=shot.doseUnit||'mcg';
   if(du==='pill')return null;
-  const doseMg=du==='mg'?(+shot.dose||0):(+shot.dose||0)/1000;
+  const doseMg=(du==='mg'||du==='iu')?(+shot.dose||0):(+shot.dose||0)/1000;
   return computeUnitsFromMg(doseMg,+inv.vialMg||0,+inv.reconBacMl||0);
 }
 
@@ -1006,7 +1023,7 @@ function shotUnits(shot){
 // don't have a mass equivalent here — return 0 and the caller skips deduction.
 function doseToMcg(dose,unit){
   if(!dose||dose<=0)return 0;
-  if(unit==='mg')return (+dose)*1000;
+  if(unit==='mg'||unit==='iu')return (+dose)*1000;
   if(unit==='mcg')return +dose;
   return 0; // pill, units, mL — no mass-based deduction
 }
@@ -3873,7 +3890,7 @@ function refreshLogAfterShotChange(){
 const SHOT_LOG_DEFAULT_DOSE_UNIT='mg';
 function normalizeShotLogDoseUnit(unit){
   const u=String(unit||'').trim().toLowerCase();
-  if(u==='mg'||u==='mcg'||u==='pill') return u;
+  if(u==='mg'||u==='mcg'||u==='pill'||u==='iu') return u;
   // "units"/mL/iu are volume-ish — never use them as the dose unit default.
   return SHOT_LOG_DEFAULT_DOSE_UNIT;
 }
@@ -4020,7 +4037,7 @@ function showPeptideChart(name){
   empty.style.display='none';
   wrap.style.display='block';
   // Normalize every dose to mcg so mixed units can be compared
-  const toMcg=s=>((s.doseUnit||'mcg')==='mg'?(Number(s.dose)||0)*1000:(Number(s.dose)||0));
+  const toMcg=s=>{const _du=(s.doseUnit||'mcg');return (_du==='mg'||_du==='iu')?(Number(s.dose)||0)*1000:(Number(s.dose)||0);};
   // Pick a display unit for the axis/summary: mg if every shot is mg, otherwise mcg
   const allMg=shots.length>0&&shots.every(s=>(s.doseUnit||'mcg')==='mg');
   const axisUnit=allMg?'mg':'mcg';
@@ -7233,14 +7250,14 @@ function doCalc(){
     if(toLogWrap)toLogWrap.style.display='none';
     return;
   }
-  const doseMcg=doseUnit==='mg'?doseRaw*1000:doseRaw;
+  const doseMcg=(doseUnit==='mg'||doseUnit==='iu')?doseRaw*1000:doseRaw;
   const concMcgPerMl=(vialMg*1000)/bacMl;
   const volMl=doseMcg/concMcgPerMl;
   const u100=volMl*100;
   const dosesPerVial=Math.floor((vialMg*1000)/doseMcg);
   const daysSupply=dosesPerVial/freq;
   const runoutDate=new Date(Date.now()+daysSupply*864e5);
-  const doseLabel=doseUnit==='mg'?doseRaw+'mg':doseMcg>=1000?(doseMcg/1000)+'mg':doseMcg+'mcg';
+  const doseLabel=doseUnit==='iu'?doseRaw+'iu':doseUnit==='mg'?doseRaw+'mg':doseMcg>=1000?(doseMcg/1000)+'mg':doseMcg+'mcg';
   const units=Math.round(u100*10)/10;
   const over=u100>syr.max;
   g('calc-result-headline').innerHTML='For a dose of <b>'+doseLabel+'</b>, pull the syringe to <b style="color:var(--accent-red-fg)">'+units+' units</b>'+(over?' <span style="color:var(--accent-red-fg);font-size:13px">(exceeds '+syr.max+'u syringe!)</span>':'')+(over?'':' <span style="font-size:13px;color:var(--color-text-secondary)">('+volMl.toFixed(3)+'mL)</span>')+'.';
@@ -7261,9 +7278,10 @@ function doCalc(){
   }
   const rs=g('calc-result-syringe');rs.innerHTML='';
   rs.appendChild(makeResultSyringe(u100,syr.max,syr.ml+'mL',syr.step));
-  g('calc-conc').textContent=concMcgPerMl>=1000?(concMcgPerMl/1000).toFixed(2)+' mg/mL':concMcgPerMl.toFixed(0)+' mcg/mL';
+  g('calc-conc').textContent=doseUnit==='iu'?((vialMg/bacMl).toFixed(1).replace(/\.0$/,'')+' iu/mL'):concMcgPerMl>=1000?(concMcgPerMl/1000).toFixed(2)+' mg/mL':concMcgPerMl.toFixed(0)+' mcg/mL';
   const pepLab=(S.inv||[]).find(p=>p.id===window._calcLoadedPepId);
-  const vialLine=fmtVialMgSuffix(vialMg,pepLab&&pepLab.vialMgDisplayUnit)||(vialMg+'mg');
+  let vialLine=fmtVialMgSuffix(vialMg,pepLab&&pepLab.vialMgDisplayUnit)||(vialMg+'mg');
+  if(doseUnit==='iu'){const f=tmpIuPerMgFor(pepLab);vialLine=vialMg+'iu'+(f>0?' (\u2248'+(vialMg/f).toFixed(vialMg/f<10?1:0)+'mg)':'');}
   g('calc-total-pep').textContent=vialLine+' / '+bacMl+'mL '+((window._calcDiluent==='saline')?'saline':'BAC');
   g('calc-doses').textContent=dosesPerVial+' doses';
   g('calc-days').textContent=Math.round(daysSupply)+' days';

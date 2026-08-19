@@ -16977,14 +16977,20 @@ __tmpInstallUnifiedRenderCalHook();
   function firstOfMonthISO(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-01'; }
   function firstOfYearISO(){ return new Date().getFullYear() + '-01-01'; }
 
-  // Normalize dose+unit into mg. Ignores pill, iu, ml, unknown.
-  function doseInMg(dose, unit){
+  // Normalize dose+unit into mg. IU converts via the peptide's IU-per-mg
+  // factor (item.iuPerMg or known substances like HGH = 3 iu/mg) when
+  // available; otherwise IU, pill, ml are excluded from mg totals.
+  function doseInMg(dose, unit, pepName){
     var n = +dose;
     if (!isFinite(n) || n <= 0) return 0;
     var u = String(unit || 'mg').toLowerCase();
     if (u === 'mg') return n;
     if (u === 'mcg' || u === 'ug' || u === 'μg') return n / 1000;
     if (u === 'g')  return n * 1000;
+    if (u === 'iu'){
+      var f = (typeof window.tmpIuPerMgFor === 'function') ? window.tmpIuPerMgFor(pepName || '') : 0;
+      return f > 0 ? n / f : 0;
+    }
     return 0;
   }
 
@@ -17032,7 +17038,7 @@ __tmpInstallUnifiedRenderCalHook();
     var byPep = Object.create(null);
     var byDay = Object.create(null);
     shots.forEach(function(s){
-      var mg = doseInMg(s.dose, s.doseUnit);
+      var mg = doseInMg(s.dose, s.doseUnit, s.peptide);
       totalMg += mg;
       var name = (s.peptide || '(unnamed)').trim() || '(unnamed)';
       var p = byPep[name] || (byPep[name] = {
