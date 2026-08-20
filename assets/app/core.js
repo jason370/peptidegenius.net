@@ -2729,7 +2729,13 @@ function renderCal(opts){
         let cell;
         // Cycle window: scheduled cells outside cycleStart/cycleEnd are hidden,
         // but any cell that has a logged shot stays visible (history wins).
-        const logged=name?weekShotMap.get(ds+'|'+time+'|'+name)||weekShotMap.get(ds+'|'+(time==='am'?'pm':'am')+'|'+name):null;
+        // Dual-slot fix (20260819): when a peptide is scheduled in BOTH am and
+        // pm on this day, match shots strictly to this cell's own time bucket -
+        // otherwise logging the AM shot would light the PM cell's needle too.
+        // The opposite-bucket fallback remains for single-slot items (log time
+        // differing from scheduled time still marks the one scheduled cell).
+        const _dualSlot=name?!!(S.sched&&S.sched[sk(name,'am',di)]&&S.sched[sk(name,'pm',di)]):false;
+        const logged=name?(weekShotMap.get(ds+'|'+time+'|'+name)||(_dualSlot?null:weekShotMap.get(ds+'|'+(time==='am'?'pm':'am')+'|'+name))):null;
         const inWindow=name?isInCycleWindow(name,ds):true;
         if(name&&!logged&&!inWindow){
           cell=document.createElement('button');cell.type='button';cell.className='sc e cal-day-pick';
