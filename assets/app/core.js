@@ -6662,6 +6662,25 @@ function renderCalc(){
     window._calcSetVialMg((existingVial>0)?existingVial:10);
     const inp=g('calc-vial');if(inp)inp.addEventListener('input',()=>{delete inp.dataset.quickVal;vc.querySelectorAll('.calc-btn').forEach(x=>x.classList.remove('on'));doCalc();});
   })();
+  // TMP-IU: vial preset labels follow the dose unit. When the dose is in iu,
+  // the vial is entered in iu too (e.g. HGH 10iu kits) - same numbers, right
+  // unit family, so the ratio math stays exact. Called from doCalc so any
+  // path that changes the dose unit (select, Load-from-inventory) re-syncs.
+  window._calcSyncVialUnitLabels=function(){
+    const u=(gv('calc-dose-unit')||'mcg')==='iu'?'iu':'mg';
+    const vc2=g('calc-vial-btns');
+    if(vc2&&vc2.dataset.unitLbl!==u){
+      vc2.dataset.unitLbl=u;
+      vc2.querySelectorAll('.calc-btn').forEach(b=>{
+        const n=parseFloat(b.textContent);
+        if(!isNaN(n))b.textContent=n+u;
+      });
+    }
+    const vinp=g('calc-vial');
+    if(vinp){const ph='Other ('+u+')';if(vinp.placeholder!==ph)vinp.placeholder=ph;}
+    const vt=document.querySelector('.gpt141-vial .gpt141-step-title');
+    if(vt){const want=u==='iu'?'Peptide vial quantity (iu)':'Peptide vial quantity';if(vt.textContent!==want)vt.textContent=want;}
+  };
   (function(){
     const bc=g('calc-bac-btns');if(!bc)return;bc.innerHTML='';
     if(!window._calcDiluent)window._calcDiluent='bac';
@@ -7235,6 +7254,7 @@ function calcRead(id){
 }
 
 function doCalc(){
+  try{window._calcSyncVialUnitLabels&&window._calcSyncVialUnitLabels();}catch(_){}
   const doseRaw=parseFloat(calcRead('calc-dose'));
   const doseUnit=gv('calc-dose-unit');
   const vialMg=parseFloat(calcRead('calc-vial'));
