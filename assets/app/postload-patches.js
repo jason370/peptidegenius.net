@@ -7258,7 +7258,19 @@ function closeLogEdit(){
   document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('[data-pg="stackbuilder"],#pg-stackbuilder')) setTimeout(enhance,80);},true);
   document.addEventListener('change',e=>{if(e.target&&e.target.closest&&e.target.closest('#pg-stackbuilder')) setTimeout(enhance,80);},true);
   const mo=new MutationObserver(()=>{const pg=document.getElementById('pg-stackbuilder'); if(pg&&pg.style.display!=='none'&&!window.__tmpMoQuiet.active()&&!mo.__pending){mo.__pending=1;setTimeout(()=>{mo.__pending=0;window.__tmpMoQuiet.run(enhance);},30);}});
-  try{mo.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});}catch(_){}
+  // PERF (20260820): was observing document.body with subtree - every style/class
+  // mutation anywhere in the app (calendar renders, toasts, cell highlights)
+  // woke this callback even though #pg-stackbuilder is display:none by default.
+  // Now scoped to the Stack Builder container itself, plus a cheap visibility
+  // watcher on its inline style so first-open still enhances.
+  try{
+    var _sbPg=document.getElementById('pg-stackbuilder');
+    if(_sbPg){
+      mo.observe(_sbPg,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+    }else{
+      mo.observe(document.body,{childList:true,attributes:false});
+    }
+  }catch(_){}
   setTimeout(enhance,400);
 })();
 
