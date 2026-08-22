@@ -1315,7 +1315,48 @@ function maxShotId(list){
 }
 // Pull disk state into memory when another tab wrote a newer revision, or when
 // disk has shot history we are missing. Returns true if S was mutated.
+
+// PERF-SAVE-R1 (20260822): cross-tab change stamp.
+// reconcileFromDisk() used to JSON.parse the ENTIRE saved state on every single
+// save flush (391 KB / ~5 ms parse at 729 shots, and growing) purely to check
+// whether another tab had written something newer. That full parse is now gated
+// behind a tiny separate localStorage key holding just "rev|shotCount|maxShotId".
+// Reading + comparing that string is microseconds. The expensive parse only runs
+// when the stamp actually differs from what this tab last wrote — i.e. when a
+// different tab really did change something. Same safety guarantees, ~0 cost in
+// the overwhelmingly common single-tab case.
+const TMP_STAMP_KEY='peptide_tracker_stamp';
+let _tmpLastStamp=null;
+function _tmpComputeStamp(){
+  const shots=Array.isArray(S.shots)?S.shots:[];
+  return (Number(S._saveRev)||0)+'|'+shots.length+'|'+maxShotId(shots);
+}
+function _tmpReadStamp(){
+  try{return localStorage.getItem(TMP_STAMP_KEY);}catch(_){return null;}
+}
+function _tmpWriteStamp(){
+  try{
+    const st=_tmpComputeStamp();
+    localStorage.setItem(TMP_STAMP_KEY,st);
+    _tmpLastStamp=st;
+  }catch(_){}
+}
+// True when disk may hold changes this tab hasn't seen. Conservative: any
+// unreadable/missing stamp returns true so we fall back to the full parse.
+function _tmpDiskMayDiffer(){
+  const disk=_tmpReadStamp();
+  if(disk==null)return true;              // no stamp yet (first run / older build)
+  if(_tmpLastStamp==null)return true;     // this tab hasn't written since load
+  return disk!==_tmpLastStamp;
+}
+window.__tmpSaveStampDebug=function(){
+  return {diskStamp:_tmpReadStamp(),lastWritten:_tmpLastStamp,computed:_tmpComputeStamp()};
+};
+
 function reconcileFromDisk(){
+  // PERF-SAVE-R1: whatever the outcome, this tab has now seen disk state -
+  // adopt the disk stamp so the next save's cheap check is accurate.
+  try{_tmpLastStamp=_tmpReadStamp();}catch(_){}
   try{
     const raw=localStorage.getItem('peptide_tracker');
     if(!raw)return false;
@@ -1356,12 +1397,15 @@ function _flushSaveNow(){
   (window.__tmpSavePre||[]).forEach(function(fn){try{fn();}catch(_){}});
   // SHOT-PERSIST-R1: merge any newer/extra shots from disk before we write, so
   // a background tab cannot clobber shots logged in another tab.
-  try{reconcileFromDisk();}catch(_){}
+  // PERF-SAVE-R1: only pay the full-state parse when the cross-tab stamp says
+  // another tab actually wrote. Single-tab saves skip it entirely.
+  try{if(_tmpDiskMayDiffer())reconcileFromDisk();}catch(_){}
   S._saveRev=(Number(S._saveRev)||0)+1;
   S._saveAt=Date.now();
   const payload=JSON.stringify(S);
   let _lsOk=false;
   try{localStorage.setItem('peptide_tracker',payload);_lsOk=true;}catch(e){console.error('localStorage save failed:',e);}
+  if(_lsOk)_tmpWriteStamp();
   // (removed) sessionStorage mirror: it duplicated the full payload on every
   // save but was never read anywhere in the app — pure main-thread cost.
   idbPut(payload).catch(()=>{});
