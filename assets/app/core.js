@@ -6989,9 +6989,14 @@ function renderCalc(){
         if(calcOilModeActive()||(last&&last.mode==='oil')){
           return { pep:cand, reason:'loaded-oil' };
         }
-        if(cand.isBlend||(!last||!last.over)){
-          return { pep:cand, reason:'loaded' };
-        }
+        // CALC-HANDOFF-R2 (20260823): an explicit "Load from inventory" pick is
+        // the user's stated intent - always honor it. The old guard
+        // (cand.isBlend || !last || !last.over) could fall through for oil/TRT
+        // SKUs like "TC 200", which then hit the vial+BAC matcher below. That
+        // matcher requires reconBacMl, which oils never have (they're not
+        // reconstituted), so resolution returned null, the handoff aborted
+        // before prefilling, and Shot Log kept the previous peptide's values.
+        return { pep:cand, reason:'loaded' };
       }
     }
     if(last&&last.mode==='oil'){
