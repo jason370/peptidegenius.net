@@ -4057,6 +4057,102 @@ window.__tmpPgDebounced=function(key,fn,ms){
     });
   }
 
+  // OIL-WEEKSTRIP-R1 (20260925): Sun-Sat injection map for the oil/TRT
+  // calculator. Turns the abstract "injections per week" number into the actual
+  // weekday pattern, with mg on each injection day and the weekly total.
+  // Schedules whose interval doesn't divide into a week (EOD, every 3 days,
+  // every 36h) shift week to week - those are labelled as a typical week rather
+  // than presented as fixed. Schedules longer than a week (every 10 days,
+  // bi-weekly) have no fixed weekday at all and say so.
+  const _OIL_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let _oilStartDay = 0;
+  try{
+    const sd = parseInt(localStorage.getItem('tmp.calc.oil.startDay'), 10);
+    if(sd >= 0 && sd <= 6) _oilStartDay = sd;
+  }catch(_){}
+
+  // Day offsets (0-6 from the start day) that receive an injection in one week.
+  function _oilWeekOffsets(ipw){
+    if(!(ipw > 0)) return [];
+    const interval = 7 / ipw;
+    if(interval > 7) return [0];          // longer than a week - one, then it drifts
+    const out = [];
+    for(let i = 0; i * interval < 7 - 1e-9; i++){
+      // Round .5 DOWN: a 3.5-day interval becomes a 3-then-4 day split
+      // (Mon/Thu), which is the conventional twice-weekly pattern. Plain
+      // Math.round would give 4-then-3 (Mon/Fri).
+      const d = Math.floor(i * interval + 0.5 - 1e-9) % 7;
+      if(out.indexOf(d) === -1) out.push(d);
+    }
+    return out;
+  }
+
+  function _oilRenderWeekStrip(mgInj, ipw){
+    const grid = document.getElementById('calc-oil-daygrid');
+    const note = document.getElementById('calc-oil-weeknote');
+    if(!grid) return;
+    if(!(mgInj > 0) || !(ipw > 0)){
+      grid.innerHTML = '';
+      if(note) note.textContent = '';
+      return;
+    }
+    const interval = 7 / ipw;
+    const offsets = _oilWeekOffsets(ipw);
+    const hitDays = new Set(offsets.map(o => (o + _oilStartDay) % 7));
+    const perWeekMg = mgInj * hitDays.size;
+
+    grid.innerHTML = '';
+    for(let d = 0; d < 7; d++){
+      const on = hitDays.has(d);
+      const cell = document.createElement('div');
+      cell.style.cssText =
+        'border-radius:8px;padding:7px 4px;text-align:center;border:.5px solid ' +
+        (on ? 'var(--accent-green-fg,#0F766E)' : 'var(--calc-tile-border)') +
+        ';background:' + (on ? 'rgba(16,185,129,.12)' : 'transparent');
+      const nm = document.createElement('div');
+      nm.textContent = _OIL_DAYS[d];
+      nm.style.cssText = 'font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:' +
+        (on ? 'var(--accent-green-fg,#0F766E)' : 'var(--calc-label)');
+      const val = document.createElement('div');
+      val.textContent = on ? (mgInj < 10 ? mgInj.toFixed(1) : Math.round(mgInj)) + ' mg' : '\u2014';
+      val.style.cssText = 'font-size:' + (on ? '12px' : '11px') + ';font-weight:' + (on ? '700' : '400') +
+        ';margin-top:3px;color:' + (on ? 'var(--color-text-primary)' : 'var(--calc-label)') +
+        ';opacity:' + (on ? '1' : '.5');
+      cell.appendChild(nm); cell.appendChild(val);
+      grid.appendChild(cell);
+    }
+
+    if(note){
+      const cycleFrom = ' in a 7-day cycle from <b>' + _OIL_DAYS[_oilStartDay] + '</b>';
+      const totalTxt = '<b>' + (perWeekMg < 10 ? perWeekMg.toFixed(1) : Math.round(perWeekMg)) +
+        ' mg</b> across <b>' + hitDays.size + '</b> injection' + (hitDays.size === 1 ? '' : 's') + cycleFrom;
+      if(interval > 7){
+        const everyD = Math.round(interval);
+        note.innerHTML = totalTxt + ' \u00b7 every ' + everyD +
+          ' days doesn\u2019t repeat on a fixed weekday \u2014 one dose shown for reference.';
+      }else if(Math.abs(ipw - Math.round(ipw)) > 1e-9){
+        note.innerHTML = totalTxt + ' \u00b7 every ' + (Math.round(interval * 10) / 10) +
+          ' days shifts the weekdays each cycle (averages ' +
+          (Math.round(ipw * 100) / 100) + '/wk).';
+      }else{
+        note.innerHTML = totalTxt + '.';
+      }
+    }
+  }
+
+  function _oilWireStartDay(){
+    const sel = document.getElementById('calc-oil-startday');
+    if(!sel || sel._wired) return;
+    sel._wired = true;
+    sel.value = String(_oilStartDay);
+    sel.addEventListener('change', () => {
+      const v = parseInt(sel.value, 10);
+      _oilStartDay = (v >= 0 && v <= 6) ? v : 0;
+      try{ localStorage.setItem('tmp.calc.oil.startDay', String(_oilStartDay)); }catch(_){}
+      doOilCalc();
+    });
+  }
+
   function doOilCalc(){
     const conc = parseFloat(document.getElementById('calc-oil-conc').value) || 0;
     const inputVal = parseFloat(document.getElementById('calc-oil-week').value) || 0;
@@ -4069,7 +4165,8 @@ window.__tmpPgDebounced=function(key,fn,ms){
     if(conc <= 0 || inputVal <= 0 || vialMl <= 0 || ipw <= 0){
       set('calc-oil-mg','—'); set('calc-oil-ml','—'); set('calc-oil-injwk','—');
       set('calc-oil-units','—'); set('calc-oil-monthly','—'); set('calc-oil-yearly','—');
-      set('calc-oil-daysvial','—');
+      set('calc-oil-daysvial','—'); set('calc-oil-weekly','—');
+      _oilWireStartDay(); _oilRenderWeekStrip(0, 0);
       const hl = document.getElementById('calc-oil-headline');
       if(hl) hl.textContent = 'Fill in the fields above to see your protocol.';
       const sh = document.getElementById('calc-oil-syringe');
@@ -4108,6 +4205,9 @@ window.__tmpPgDebounced=function(key,fn,ms){
     set('calc-oil-ml', mlInj.toFixed(3) + ' mL');
     set('calc-oil-injwk', ipw.toFixed(ipw % 1 === 0 ? 0 : 1));
     set('calc-oil-units', unitsRound + ' u' + (over ? ' ⚠' : ''));
+    set('calc-oil-weekly', (week < 10 ? (Math.round(week*10)/10) : Math.round(week)) + ' mg');
+    _oilWireStartDay();
+    _oilRenderWeekStrip(mgInj, ipw);
     set('calc-oil-monthly', Math.round(monthly) + ' mg');
     set('calc-oil-yearly', Math.round(yearly).toLocaleString() + ' mg');
     set('calc-oil-daysvial', Math.round(daysPerVial) + ' d');
