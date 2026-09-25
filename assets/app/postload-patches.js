@@ -4087,6 +4087,26 @@ window.__tmpPgDebounced=function(key,fn,ms){
     return out;
   }
 
+  // Actual injections landing in each consecutive 7-day window. Fractional
+  // schedules alternate (EOD = 4,3,4,3...), so this reports the real spread
+  // instead of implying every week is identical.
+  function _oilCycleSpread(ipw){
+    if(!(ipw > 0)) return null;
+    const interval = 7 / ipw;
+    const HORIZON = 70; // 10 weeks - enough for every preset to repeat
+    const days = [];
+    for(let i = 0; ; i++){
+      const d = Math.floor(i * interval + 0.5 - 1e-9);
+      if(d >= HORIZON) break;
+      days.push(d);
+    }
+    const counts = [];
+    for(let w = 0; w < HORIZON / 7; w++){
+      counts.push(days.filter(d => d >= w * 7 && d < (w + 1) * 7).length);
+    }
+    return { min: Math.min.apply(null, counts), max: Math.max.apply(null, counts) };
+  }
+
   function _oilRenderWeekStrip(mgInj, ipw){
     const grid = document.getElementById('calc-oil-daygrid');
     const note = document.getElementById('calc-oil-weeknote');
@@ -4123,19 +4143,27 @@ window.__tmpPgDebounced=function(key,fn,ms){
     }
 
     if(note){
-      const cycleFrom = ' in a 7-day cycle from <b>' + _OIL_DAYS[_oilStartDay] + '</b>';
-      const totalTxt = '<b>' + (perWeekMg < 10 ? perWeekMg.toFixed(1) : Math.round(perWeekMg)) +
-        ' mg</b> across <b>' + hitDays.size + '</b> injection' + (hitDays.size === 1 ? '' : 's') + cycleFrom;
+      const fmt = v => (v < 10 ? Math.round(v * 10) / 10 : Math.round(v));
+      const shown = '<b>' + fmt(perWeekMg) + ' mg</b> this cycle \u00b7 <b>' + hitDays.size +
+        '</b> injection' + (hitDays.size === 1 ? '' : 's') + ' from <b>' + _OIL_DAYS[_oilStartDay] + '</b>';
+      const avgMg = mgInj * ipw;
       if(interval > 7){
-        const everyD = Math.round(interval);
-        note.innerHTML = totalTxt + ' \u00b7 every ' + everyD +
-          ' days doesn\u2019t repeat on a fixed weekday \u2014 one dose shown for reference.';
+        note.innerHTML = shown + '. Every ' + Math.round(interval) +
+          ' days doesn\u2019t repeat on a fixed weekday \u2014 one dose shown for reference. ' +
+          'Averages <b>' + fmt(avgMg) + ' mg/wk</b>.';
       }else if(Math.abs(ipw - Math.round(ipw)) > 1e-9){
-        note.innerHTML = totalTxt + ' \u00b7 every ' + (Math.round(interval * 10) / 10) +
-          ' days shifts the weekdays each cycle (averages ' +
-          (Math.round(ipw * 100) / 100) + '/wk).';
+        // Fractional schedule: reconcile the per-cycle total against the
+        // Weekly Dose tile explicitly, so the two figures never look
+        // contradictory (EOD shows 280 here but averages 245).
+        const sp = _oilCycleSpread(ipw);
+        const swing = (sp && sp.min !== sp.max)
+          ? ' alternates <b>' + sp.max + '</b> and <b>' + sp.min + '</b> injections per week (' +
+            fmt(mgInj * sp.max) + ' / ' + fmt(mgInj * sp.min) + ' mg)'
+          : ' shifts weekdays each cycle';
+        note.innerHTML = shown + '. ' + _schedLabel + swing +
+          ', averaging <b>' + fmt(avgMg) + ' mg/wk</b> \u2014 the Weekly Dose figure above.';
       }else{
-        note.innerHTML = totalTxt + '.';
+        note.innerHTML = shown + '.';
       }
     }
   }
@@ -4205,7 +4233,10 @@ window.__tmpPgDebounced=function(key,fn,ms){
     set('calc-oil-ml', mlInj.toFixed(3) + ' mL');
     set('calc-oil-injwk', ipw.toFixed(ipw % 1 === 0 ? 0 : 1));
     set('calc-oil-units', unitsRound + ' u' + (over ? ' ⚠' : ''));
-    set('calc-oil-weekly', (week < 10 ? (Math.round(week*10)/10) : Math.round(week)) + ' mg');
+    // 'avg' qualifier for fractional schedules (EOD etc.), where the per-week
+    // total genuinely alternates and this figure is the long-run mean.
+    const _wkAvgTag = Math.abs(ipw - Math.round(ipw)) > 1e-9 ? ' avg' : '';
+    set('calc-oil-weekly', (week < 10 ? (Math.round(week*10)/10) : Math.round(week)) + ' mg' + _wkAvgTag);
     _oilWireStartDay();
     _oilRenderWeekStrip(mgInj, ipw);
     set('calc-oil-monthly', Math.round(monthly) + ' mg');
