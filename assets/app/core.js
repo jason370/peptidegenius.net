@@ -3903,7 +3903,45 @@ function renderLogShotRows(){
     return String(B.e.time||'').localeCompare(String(A.e.time||''));
   });
   const tbody=g('lg-tbody');
-  if(tbody)tbody.innerHTML=merged.length?merged.map((m,i)=>m.kind==='shot'?rowHtml(m.x,i):rxRowHtml(m.e,i)).join(''):emptyRow;
+  if(!tbody) return;
+  if(!merged.length){ tbody.innerHTML=emptyRow; return; }
+  // PERF-LOGROWS-R1 (20260925): cap how many rows hit the DOM.
+  // This built EVERY entry in one innerHTML assignment - at 729 shots + 107 Rx
+  // takes that is ~836 rows, ~1.1 MB of HTML and ~15k nodes, synchronously, on
+  // all 12 call sites (including after every log/edit/delete). That is the
+  // Shot Log freeze. Nothing is hidden from the user: the newest rows render
+  // immediately and a footer row loads more on demand. No data is filtered.
+  const LG_ROW_STEP=150;
+  if(typeof window._lgRowLimit!=='number' || window._lgRowLimit<LG_ROW_STEP) window._lgRowLimit=LG_ROW_STEP;
+  const _limit=Math.min(window._lgRowLimit, merged.length);
+  let _html=merged.slice(0,_limit).map((m,i)=>m.kind==='shot'?rowHtml(m.x,i):rxRowHtml(m.e,i)).join('');
+  if(merged.length>_limit){
+    const _remaining=merged.length-_limit;
+    const _next=Math.min(LG_ROW_STEP,_remaining);
+    const _btn='padding:4px 12px;font-size:11.5px;font-weight:600;border:.5px solid var(--color-border-secondary);border-radius:7px;background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;font-family:inherit;margin-left:8px';
+    _html+='<tr class="lg-more-row"><td colspan="8" style="text-align:center;padding:12px 10px;font-size:11.5px;color:var(--color-text-secondary);background:var(--color-background-secondary)">'
+      +'Showing <b>'+_limit+'</b> of <b>'+merged.length+'</b> entries'
+      +'<button type="button" id="lg-show-more" style="'+_btn+'">Show '+_next+' more</button>'
+      +'<button type="button" id="lg-show-all" style="'+_btn+'">Show all ('+merged.length+')</button>'
+      +'</td></tr>';
+  }
+  tbody.innerHTML=_html;
+}
+// PERF-LOGROWS-R1: delegated handlers for the row-cap footer. Delegated (not
+// per-render binding) so the buttons survive every re-render for free.
+if(!window._lgRowLimitWired){
+  window._lgRowLimitWired=true;
+  document.addEventListener('click',function(e){
+    const t=e.target;
+    if(!t||!t.id) return;
+    if(t.id==='lg-show-more'){
+      window._lgRowLimit=(window._lgRowLimit||150)+150;
+    }else if(t.id==='lg-show-all'){
+      window._lgRowLimit=Number.MAX_SAFE_INTEGER;
+    }else return;
+    e.preventDefault();
+    try{ renderLogShotRows(); }catch(_){}
+  });
 }
 // RX-LOG-ROWS-R1: delegated delete for Rx rows in the shot log.
 if(!window._lgRxDelWired){
