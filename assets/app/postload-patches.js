@@ -17116,6 +17116,7 @@ __tmpInstallUnifiedRenderCalHook();
     search: '',
     sort: 'doses-desc',
     open: Object.create(null),
+    groupClosed: Object.create(null), // ANLY-GROUPS-R1: collapsed family rows
     chart: null
   };
 
@@ -17321,32 +17322,102 @@ __tmpInstallUnifiedRenderCalHook();
       + '<tbody>' + body + '</tbody></table>';
   }
 
+  // ── ANLY-GROUPS-R1 (20261110): family subtotals ──────────────────────────
+  // Peptides whose names share a first word ("TC 250", "TC 200 (old)",
+  // "TC Test Cyp 200" -> "TC") get a combined subtotal row above their
+  // individual rows. A family only appears when 2+ of its members are in the
+  // current view, so single peptides render exactly as before.
+  function familyKey(name){
+    var first = String(name || '').trim().split(/\s+/)[0] || '';
+    first = first.replace(/[^A-Za-z0-9+\-]/g, '');
+    if (first.length < 2 || !/[A-Za-z]/.test(first)) return '';
+    return first.toUpperCase();
+  }
+
+  function buildUnits(list){
+    var fams = Object.create(null);
+    list.forEach(function(p){
+      var k = familyKey(p.name);
+      if (!k) return;
+      (fams[k] || (fams[k] = [])).push(p);
+    });
+    var units = [], seen = Object.create(null);
+    list.forEach(function(p){
+      var k = familyKey(p.name);
+      var members = k ? fams[k] : null;
+      if (!members || members.length < 2){ units.push(p); return; }
+      if (seen[k]) return;
+      seen[k] = true;
+      var label = String(members[0].name).trim().split(/\s+/)[0];
+      var g = { isGroup: true, key: k, name: label, members: members,
+                doses: 0, mg: 0, pillCount: 0,
+                firstDate: members[0].firstDate, lastDate: members[0].lastDate };
+      members.forEach(function(m){
+        g.doses += m.doses;
+        g.mg += m.mg;
+        g.pillCount += m.pillCount;
+        if (m.firstDate < g.firstDate) g.firstDate = m.firstDate;
+        if (m.lastDate  > g.lastDate)  g.lastDate  = m.lastDate;
+      });
+      units.push(g);
+    });
+    return units;
+  }
+
+  function pepRowHtml(p, inGroup){
+    var avgMg = p.doses ? (p.mg / p.doses) : 0;
+    var isOpen = !!state.open[p.name];
+    var html = '<tr class="tmp-anly-row' + (inGroup ? ' tmp-anly-member' : '') + (isOpen ? ' is-open' : '') + '" data-anly-pep="' + esc(p.name) + '">'
+      + '<td><span class="tmp-anly-caret">▶</span></td>'
+      + '<td><strong>' + esc(p.name) + '</strong>'
+      + (p.pillCount ? ' <span style="font-size:9.5px;color:#4338CA;opacity:.7">(' + p.pillCount + ' pill)</span>' : '')
+      + '</td>'
+      + '<td class="num">' + p.doses + '</td>'
+      + '<td class="num">' + fmtMgPlain(p.mg) + '</td>'
+      + '<td class="num">' + fmtMgPlain(avgMg) + '</td>'
+      + '<td>' + esc(p.firstDate || '—') + '</td>'
+      + '<td>' + esc(p.lastDate || '—') + '</td>'
+      + '</tr>';
+    if (isOpen){
+      html += '<tr class="tmp-anly-detail-row"><td colspan="7">' + renderDetail(p) + '</td></tr>';
+    }
+    return html;
+  }
+
+  function groupRowHtml(g){
+    var avgMg = g.doses ? (g.mg / g.doses) : 0;
+    var closed = !!state.groupClosed[g.key];
+    return '<tr class="tmp-anly-group' + (closed ? '' : ' is-open') + '" data-anly-group="' + esc(g.key) + '"'
+      + ' title="Combined total for every ' + esc(g.name) + ' entry in this view — click to ' + (closed ? 'show' : 'hide') + ' the individual rows">'
+      + '<td><span class="tmp-anly-caret">▶</span></td>'
+      + '<td><strong>' + esc(g.name) + ' — all</strong>'
+      + ' <span class="tmp-anly-group-count">' + g.members.length + ' combined</span>'
+      + '</td>'
+      + '<td class="num">' + g.doses + '</td>'
+      + '<td class="num">' + fmtMgPlain(g.mg) + '</td>'
+      + '<td class="num">' + fmtMgPlain(avgMg) + '</td>'
+      + '<td>' + esc(g.firstDate || '—') + '</td>'
+      + '<td>' + esc(g.lastDate || '—') + '</td>'
+      + '</tr>';
+  }
+
   function renderTable(agg){
     var tbody = $('tmp-anly-tbody'); if (!tbody) return;
     var q = (state.search || '').trim().toLowerCase();
     var list = agg.byPep.filter(function(p){ return !q || p.name.toLowerCase().indexOf(q) !== -1; });
-    list = sortPeps(list);
     var empty = $('tmp-anly-empty');
     if (empty) empty.hidden = list.length > 0;
     if (!list.length) { tbody.innerHTML = ''; return; }
 
+    // Families sort among the other rows by their combined figures; members
+    // keep the chosen sort order underneath their family row.
+    var units = sortPeps(buildUnits(list));
     var html = '';
-    list.forEach(function(p){
-      var avgMg = p.doses ? (p.mg / p.doses) : 0;
-      var isOpen = !!state.open[p.name];
-      html += '<tr class="tmp-anly-row' + (isOpen ? ' is-open' : '') + '" data-anly-pep="' + esc(p.name) + '">'
-        + '<td><span class="tmp-anly-caret">▶</span></td>'
-        + '<td><strong>' + esc(p.name) + '</strong>'
-        + (p.pillCount ? ' <span style="font-size:9.5px;color:#4338CA;opacity:.7">(' + p.pillCount + ' pill)</span>' : '')
-        + '</td>'
-        + '<td class="num">' + p.doses + '</td>'
-        + '<td class="num">' + fmtMgPlain(p.mg) + '</td>'
-        + '<td class="num">' + fmtMgPlain(avgMg) + '</td>'
-        + '<td>' + esc(p.firstDate || '—') + '</td>'
-        + '<td>' + esc(p.lastDate || '—') + '</td>'
-        + '</tr>';
-      if (isOpen){
-        html += '<tr class="tmp-anly-detail-row"><td colspan="7">' + renderDetail(p) + '</td></tr>';
+    units.forEach(function(u){
+      if (!u.isGroup){ html += pepRowHtml(u, false); return; }
+      html += groupRowHtml(u);
+      if (!state.groupClosed[u.key]){
+        sortPeps(u.members).forEach(function(m){ html += pepRowHtml(m, true); });
       }
     });
     tbody.innerHTML = html;
@@ -17358,7 +17429,15 @@ __tmpInstallUnifiedRenderCalHook();
         renderTable(agg);
       });
     });
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr.tmp-anly-group'), function(tr){
+      tr.addEventListener('click', function(){
+        var key = tr.getAttribute('data-anly-group');
+        state.groupClosed[key] = !state.groupClosed[key];
+        renderTable(agg);
+      });
+    });
   }
+  // ── /ANLY-GROUPS-R1 ──────────────────────────────────────────────────────
 
   function renderChart(agg){
     var canvas = $('tmp-anly-chart');
